@@ -1,0 +1,48 @@
+@font-face { font-family: DejaVu; src: url('DejaVu.ttf'); }
+body { font-family: DejaVu; font-weight: bold; }
+/*#table { min-height: 800px; }*/
+
+/* Buttons */
+button { border-radius: 24px; color: white; height: 50px; }
+.nav-btn { width: 100px; }
+
+.red-btn { background-color: #a00; color:white; }
+.red-btn:hover { background-color: #d00; }
+.green-btn { background-color: #080; color:white; }
+.green-btn:hover { background-color: #0c0; }
+.blue-btn { background-color: #008; color:white; }
+.blue-btn:hover { background-color: #00f; }
+.grey-btn { background-color: #eee; color:black; }
+.grey-btn:hover { background-color: #ccc; }
+.red-btn:disabled, .green-btn:disabled, .blue-btn:disabled, .grey-btn:disabled {
+  background-color: #444;
+  color: black;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Board state */
+.red-name { text-align: center; background-color: #a00; color:white; }
+.white-name { text-align: center; background-color: #fff; color:black; }
+.grey-name { text-align: center; background-color: #eee; color:black; }
+.bids { font-weight: normal; text-align: center; }
+.hand {
+  background-color: #eee;
+  border-radius: 10px;
+  padding: 10px;
+}
+#note { border: 1px solid #eed; background-color: #ffe; padding: 3px; }
+
+/* Overlay HCP info to the top-right of the hand */
+.hand { position: relative; }
+.hcp { position: absolute; top: 10px; right: 15px; }
+
+/* Suit symbols */
+ss:before { color: black; content: '♠'; }
+hs:before { color: #dd0000; content: '♥'; }
+ds:before { color: #dd0000; content: '♦'; }
+cs:before { color: black; content: '♣'; }
+
+/* Double dummy */
+table.dd, table.sd { font-size: 90%; margin:auto; text-align: center; }
+table.dd td, table.sd td { min-width: 40px; }
