@@ -48,6 +48,24 @@ const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 const RANK_VALUES = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
 const BID_SUITS = ['♣', '♦', '♥', '♠', 'NT'];
 
+// --- DOUBLE DUMMY SOLVER ---
+function solve(hands) {
+  handStrings = {};
+  for (let seat of BIDDER_SEATS) {
+    const suits = { '♠': [], '♥': [], '♦': [], '♣': [] };
+    hands[seat].forEach(card => suits[card.suit].push(card.rank));
+    handStrings[seat] = '';
+    for (const suit of SUIT_SYMBOLS) {
+      const joinedSuit = suits[suit].join('');
+      handStrings[seat] += (joinedSuit === '' ? '-' : joinedSuit) + ' ';
+    }
+  }
+  return Module.ccall('solve', // name of C function
+                      'string', // return type
+                      BIDDER_SEATS.map(seat => 'string'), // argument types
+                      BIDDER_SEATS.map(seat => handStrings[seat])); // arguments
+}
+
 // --- BOARD STATE ---
 class Board {
   constructor(num) {
@@ -57,7 +75,7 @@ class Board {
     this.vulnerable = VULNERABLES[(num + round) % 4];
     this.hands = dealHands();
     this.note = '';
-    this.dd = '';
+    this.dd = [];
     this.reset();
   }
 
@@ -109,7 +127,7 @@ class Board {
 // --- BOARD HISTORY ---
 let currentBoard = -1;
 let boards = [];
-initialize();
+Module.onRuntimeInitialized = function() { initialize(); }
 
 function initialize() {
   retryBtn.addEventListener('click', retryBoard);
@@ -172,8 +190,10 @@ function prevBoard() {
 
 function nextBoard() {
   if (currentBoard == boards.length - 1) {
-    boards.push(new Board(boards.length));
-    boards[boards.length - 1].save();
+    const board = new Board(boards.length);
+    board.dd = solve(board.hands).split('\n');
+    board.save();
+    boards.push(board);
   }
   currentBoard++;
   showBoard();
@@ -399,7 +419,7 @@ function renderRowOfPairs(line, count, allowDelta = false) {
 
 function renderDoubleDummyResults() {
   const board = boards[currentBoard];
-  if (board.dd == null || board.dd === '') return;
+  if (board.dd == null || board.dd.slice(0, 5).length == 0) return;
 
   let html = '<table class="dd">';
   html += '<tr><td></td><td colspan=2><abbr title="Double-dummy tricks">S - N</abbr></td><td colspan=2><abbr title="Double-dummy tricks">W - E</abbr></td></tr>';
@@ -413,7 +433,7 @@ function renderDoubleDummyResults() {
 
 function renderSingleDummyResults() {
   const board = boards[currentBoard];
-  if (board.dd == null || board.dd === '') {
+  if (board.dd == null || board.dd.slice(6, 17).length == 0) {
     biddingGridEl.innerHTML = '<p class="col-span-full text-center text-gray-500">Auction has ended.</p>';
     return;
   }
@@ -548,3 +568,4 @@ function spaceCards(suit) {
       .replace(/\bJ\b/g, '&hairsp;&hairsp;J&hairsp;')
       .replace(/\b(T|10)\b/g, '<font style="letter-spacing:-2px">1</font>0');
 }
+
