@@ -138,6 +138,11 @@ worker.onmessage = function(event) {
   const board = boards[num];
   board.dd = result.split('\n');
   board.save();
+
+  if (board.isAuctionOver() && currentBoard == num) {
+    // Delayed rendering.
+    renderDoubleDummyResults();
+  }
 }
 
 function initialize() {
@@ -179,6 +184,10 @@ function loadBoards() {
   for (let num = 0; ; num++) {
     let board = new Board(num);
     if (!board.load()) break;
+    if (board.dd == null || board.dd.length == 0) {
+      // In case the previous solve was stopped by page refresh.
+      solve(board.num, board.hands);
+    }
     boards.push(board);
   }
 }
