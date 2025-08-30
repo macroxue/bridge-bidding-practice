@@ -49,7 +49,9 @@ const RANK_VALUES = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9
 const BID_SUITS = ['♣', '♦', '♥', '♠', 'NT'];
 
 // --- DOUBLE DUMMY SOLVER ---
-function solve(hands) {
+const worker = new Worker('worker.js');
+
+function solve(num, hands) {
   handStrings = {};
   for (let seat of BIDDER_SEATS) {
     const suits = { '♠': [], '♥': [], '♦': [], '♣': [] };
@@ -60,10 +62,7 @@ function solve(hands) {
       handStrings[seat] += (joinedSuit === '' ? '-' : joinedSuit) + ' ';
     }
   }
-  return Module.ccall('solve', // name of C function
-                      'string', // return type
-                      BIDDER_SEATS.map(seat => 'string'), // argument types
-                      BIDDER_SEATS.map(seat => handStrings[seat])); // arguments
+  worker.postMessage([num, handStrings]);
 }
 
 // --- BOARD STATE ---
@@ -127,7 +126,19 @@ class Board {
 // --- BOARD HISTORY ---
 let currentBoard = -1;
 let boards = [];
-Module.onRuntimeInitialized = function() { initialize(); }
+
+worker.onmessage = function(event) {
+  console.log(event.data);
+  if (event.data === 'Ready') {
+    initialize();
+    return;
+  }
+  const num = event.data[0];
+  const result = event.data[1];
+  const board = boards[num];
+  board.dd = result.split('\n');
+  board.save();
+}
 
 function initialize() {
   retryBtn.addEventListener('click', retryBoard);
@@ -191,7 +202,7 @@ function prevBoard() {
 function nextBoard() {
   if (currentBoard == boards.length - 1) {
     const board = new Board(boards.length);
-    board.dd = solve(board.hands).split('\n');
+    solve(board.num, board.hands);
     board.save();
     boards.push(board);
   }
@@ -225,7 +236,7 @@ function showBoard() {
     renderHand(seat, board.hands[seat], handEls[seat]);
   }
   noteEl.innerHTML = board.note;
-  renderDoubleDummyResults();
+  ddResultsEl.innerHTML = '';
 
   // Auction
   for (seat of BIDDER_SEATS) {
@@ -294,6 +305,7 @@ function endAuction() {
     button.style.display = 'none';
   }
   revealFinalHands();
+  renderDoubleDummyResults();
   renderSingleDummyResults();
 }
 
@@ -428,7 +440,6 @@ function renderDoubleDummyResults() {
   }
   html += '</table>';
   ddResultsEl.innerHTML = html;
-  ddResultsEl.style.display = 'none';
 }
 
 function renderSingleDummyResults() {
