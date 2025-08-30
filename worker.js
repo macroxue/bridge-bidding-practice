@@ -6,7 +6,6 @@ Module.onRuntimeInitialized = function() {
 const BIDDER_SEATS = [ 'West', 'North', 'East', 'South' ];
 
 onmessage = function(event) {
-  console.log(event.data);
   const num = event.data[0];
   const hands = event.data[1];
   const result =

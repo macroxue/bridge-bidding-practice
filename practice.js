@@ -1,6 +1,7 @@
 const pairPractice = (new URLSearchParams(window.location.search)).has('p');
 const clearStorage = (new URLSearchParams(window.location.search)).has('c');
 const doubleDummy = (new URLSearchParams(window.location.search)).has('d');
+const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
 // --- DOM ELEMENTS ---
 const retryBtn = document.getElementById('retry');
@@ -8,9 +9,7 @@ const firstBtn = document.getElementById('first');
 const lastBtn = document.getElementById('last')
 const prevBtn = document.getElementById('prev');
 const nextBtn = document.getElementById('next');
-const boardEl = document.getElementById('board');
-const dealerEl = document.getElementById('dealer');
-const vulnerableEl = document.getElementById('vulnerable');
+const boardNumEl = document.getElementById('board-num');
 const tableEl = document.getElementById('table');
 const handEls = {
   'South': document.getElementById('south-hand'),
@@ -30,6 +29,7 @@ const bidsEls = {
   'West': document.getElementById('west-bids'),
   'East': document.getElementById('east-bids'),
 };
+const auctionEl = document.getElementById('auction');
 const noteEl = document.getElementById('note');
 const biddingGridEl = document.getElementById('bidding-grid');
 const ddResultsEl = document.getElementById('dd-results');
@@ -128,7 +128,6 @@ let currentBoard = -1;
 let boards = [];
 
 worker.onmessage = function(event) {
-  console.log(event.data);
   if (event.data === 'Ready') {
     initialize();
     return;
@@ -235,12 +234,10 @@ function showBoard() {
   retryBtn.disabled = board.auction.length == 0;
 
   // Info
-  boardEl.innerHTML = board.num + 1;
-  dealerEl.innerHTML = board.dealer;
-  vulnerableEl.innerHTML = board.vulnerable;
+  boardNumEl.innerHTML = board.num + 1;
 
   // Hands
-  tableEl.style.minHeight = pairPractice ? '240px' : '320px';
+  tableEl.style.minHeight = pairPractice ? '140px' : '280px';
   for (seat of BIDDER_SEATS) {
     renderHand(seat, board.hands[seat], handEls[seat]);
   }
@@ -288,11 +285,18 @@ function takeTurn() {
 }
 
 function showBid(player, bid) {
-  const board = boards[currentBoard];
-  const suit = bid[1];
-  const suitHtml = '♠♥♦♣'.includes(suit) ? SUIT_HTMLS[suit] : '';
-  const bidHtml = suitHtml !== '' ? bid[0] + suitHtml : bid;
+  let bidHtml = '';
+  if (bid === 'Pass') bidHtml = 'P';
+  else if (bid === 'Dbl') bidHtml = 'X';
+  else if (bid === 'Rdbl') bidHtml = 'XX';
+  else {
+    const suit = bid[1];
+    const suitHtml = '♠♥♦♣'.includes(suit) ? SUIT_HTMLS[suit] : '';
+    bidHtml = suitHtml !== '' ? bid[0] + suitHtml : bid;
+  }
   bidsEls[player].innerHTML += bidHtml + '<br>';
+  // Scroll to bottom to show the latest bid.
+  auctionEl.scrollTop = auctionEl.scrollHeight;
 }
 
 function handleBid(bid) {
@@ -332,26 +336,27 @@ function renderHand(seat, hand, targetEl) {
   targetEl.innerHTML = '';
 
   const nameContainer = document.createElement('div');
-  nameContainer.className = 'grey-name';
-  nameContainer.innerHTML = seat;
+  nameContainer.className = board.isVulnerable(seat) ? 'red-name' : 'white-name';
+  nameContainer.innerHTML = seat + ' (' + calcHandHcp(hand) + ')';
   targetEl.appendChild(nameContainer);
 
   const suits = { '♠': [], '♥': [], '♦': [], '♣': [] };
   hand.forEach(card => suits[card.suit].push(card.rank));
 
   for (const suit of SUIT_SYMBOLS) {
+    const len = suits[suit].length;
+    let cards = spaceCards(len > 0 ? suits[suit].join(' ') : '-');
+    const threshold = (smallScreen ? 6 : 7);
+    if (len >= threshold) {
+      const space = threshold - len;
+      cards = '<font style="letter-spacing:' + space + 'px">' + cards + '</font>';
+    }
+    const gap = (smallScreen ? '&hairsp;' : '&nbsp;')
     const suitContainer = document.createElement('div');
     suitContainer.className = 'suit';
-    suitContainer.innerHTML = SUIT_HTMLS[suit] + ' ' +
-      spaceCards(suits[suit].length > 0 ? suits[suit].join(' ') : '-');
+    suitContainer.innerHTML = gap + SUIT_HTMLS[suit] + gap + cards;
     targetEl.appendChild(suitContainer);
   }
-
-  const hcp = calcHandHcp(hand);
-  const hcpContainer = document.createElement('div');
-  hcpContainer.className = 'hcp';
-  hcpContainer.innerHTML = '(' + hcp + ")";
-  targetEl.appendChild(hcpContainer);
 }
 
 function renderBiddingControls() {
@@ -367,7 +372,7 @@ function renderBiddingControls() {
 
   if (!pairPractice) {
     const dblBtn = document.createElement('button');
-    dblBtn.textContent = 'Dbl';
+    dblBtn.textContent = 'X';
     dblBtn.className = 'red-btn transition-colors duration-200';
     dblBtn.onclick = () => handleBid('Dbl');
     biddingGridEl.appendChild(dblBtn);
@@ -379,7 +384,7 @@ function renderBiddingControls() {
     dblBtn.disabled = !canDbl;
 
     const rdblBtn = document.createElement('button');
-    rdblBtn.textContent = 'Rdbl';
+    rdblBtn.textContent = 'XX';
     rdblBtn.className = 'blue-btn transition-colors duration-200';
     rdblBtn.onclick = () => handleBid('Rdbl');
     biddingGridEl.appendChild(rdblBtn);
@@ -430,7 +435,7 @@ function renderRowOfPairs(line, count, allowDelta = false) {
   for (let i = 1; i < items.length; i += 2) {
     const new_items = mergeNumbers(items[i], items[i + 1], allowDelta);
     if (new_items.length == 1) {
-      html += '<td colspan=2 style="min-width:80px">' + new_items[0] + '</td>';
+      html += '<td colspan=2 style="min-width:40px">' + new_items[0] + '</td>';
     } else {
       html += '<td>' + items[i] + '</td><td>' + items[i + 1] + '</td>';
     }
@@ -442,8 +447,12 @@ function renderDoubleDummyResults() {
   const board = boards[currentBoard];
   if (board.dd == null || board.dd.slice(0, 5).length == 0) return;
 
-  let html = '<table class="dd">';
-  html += '<tr><td></td><td colspan=2><abbr title="Double-dummy tricks">S - N</abbr></td><td colspan=2><abbr title="Double-dummy tricks">W - E</abbr></td></tr>';
+  let html = `<table class="dd">
+  <tr>
+    <th></th>
+    <th colspan=2><abbr title="Double-dummy tricks by South or North">S-N</abbr></th>
+    <th colspan=2><abbr title="Double-dummy tricks by West or East">W-E</abbr></th>
+  </tr>`;
   for (const line of board.dd.slice(0, 5)) {
     html += renderRowOfPairs(line, 5);
   }
@@ -458,20 +467,25 @@ function renderSingleDummyResults() {
     return;
   }
 
-  let html = '<table class="sd col-span-full"><tr><td></td>';
-  html += '</tr><tr><td></td><td colspan=2><abbr title="Single-dummy average tricks">S - N</abbr></td>';
+  let html = `<table class="sd col-span-full">
+  <tr>
+    <th></th>
+    <th colspan=2><abbr title="Average tricks by South or North">S-N</abbr></th>`;
   for (let t = 7; t <= 13; t++) {
     const hint = `Percentage of taking ${t} tricks or more`;
-    html += `<td colspan=2><abbr title="${hint}">S ${t} N</abbr></td>`;
+    html += `<th colspan=2><abbr title="${hint}">${t}</abbr></th>`;
   }
   html += '</tr>';
   for (const line of board.dd.slice(6, 11)) {
     html += renderRowOfPairs(line, 17, /*allowDelta*/true);
   }
-  html += '</tr><tr><td></td><td colspan=2><abbr title="Single-dummy average tricks">W - E</abbr></td>';
+  html += `</tr>
+  <tr>
+    <th></th>
+    <th colspan=2><abbr title="Average tricks by West or East">W-E</abbr></th>`;
   for (let t = 7; t <= 13; t++) {
     const hint = `Percentage of taking ${t} tricks or more`;
-    html += `<td colspan=2><abbr title="${hint}">W ${t} E</abbr></td>`;
+    html += `<th colspan=2><abbr title="${hint}">${t}</abbr></th>`;
   }
   html += '</tr>';
   for (const line of board.dd.slice(12, 17)) {
@@ -584,8 +598,13 @@ function nextPlayer(player) {
 }
 
 function spaceCards(suit) {
+  if (smallScreen) {
+    return suit.replace(/' '/g, '&hairsp;')
+      .replace(/\bJ\b/g, '&hairsp;J&hairsp;')
+      .replace(/\b(T|10)\b/g, '<font style="letter-spacing:-3px">1</font>0');
+  } else {
     return suit.replace(/' '/g, '&thinsp;')
       .replace(/\bJ\b/g, '&hairsp;&hairsp;J&hairsp;')
       .replace(/\b(T|10)\b/g, '<font style="letter-spacing:-2px">1</font>0');
+  }
 }
-
