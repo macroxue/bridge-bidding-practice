@@ -2,8 +2,8 @@
 body { font-family: DejaVu; font-weight: bold; }
 
 #board-num { text-align:center; width: 64px; }
-#auction { border: 1px solid lightgrey; height: 124px; overflow: scroll; }
-#bidding-controls { overflow: scroll; }
+#auction { border: 1px solid lightgrey; height: 124px; overflow: auto; }
+#bidding-controls { overflow: auto; }
 
 /* Buttons */
 button { border-radius: 24px; color: white; height: 50px; }
