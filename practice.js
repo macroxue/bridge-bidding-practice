@@ -150,6 +150,27 @@ function initialize() {
   lastBtn.addEventListener('click', lastBoard);
   prevBtn.addEventListener('click', prevBoard);
   nextBtn.addEventListener('click', nextBoard);
+  boardNumEl.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      boardNumEl.blur();
+    }
+  });
+  boardNumEl.addEventListener('blur', () => {
+    const num = Number(boardNumEl.innerHTML);
+    if (1 <= num && num <= boards.length) {
+      currentBoard = num - 1;
+      showBoard();
+    } else {
+      boardNumEl.innerHTML = currentBoard + 1;
+    }
+  });
+  noteEl.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      noteEl.blur();
+    }
+  });
   noteEl.addEventListener('blur', () => {
     boards[currentBoard].note = noteEl.innerHTML;
     boards[currentBoard].save();

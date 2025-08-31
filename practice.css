@@ -1,6 +1,7 @@
 @font-face { font-family: DejaVu; src: url('DejaVu.ttf'); }
 body { font-family: DejaVu; font-weight: bold; }
 
+#board-num { text-align:center; width: 64px; }
 #auction { border: 1px solid lightgrey; height: 124px; overflow: scroll; }
 #bidding-controls { overflow: scroll; }
 
