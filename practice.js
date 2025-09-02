@@ -32,6 +32,7 @@ const bidsEls = {
 const auctionEl = document.getElementById('auction');
 const noteEl = document.getElementById('note');
 const biddingGridEl = document.getElementById('bidding-grid');
+const contractEl = document.getElementById('contract');
 const ddResultsEl = document.getElementById('dd-results');
 
 // --- CONSTANTS ---
@@ -40,30 +41,19 @@ const STORAGE_KEY_PREFIX = 'Board #';
 const DEALER_SEATS = [ 'North', 'East', 'South', 'West' ];
 const VULNERABLES = [ 'None', 'N-S', 'E-W', 'All' ];
 const BIDDER_SEATS = [ 'West', 'North', 'East', 'South' ];
-const SUITS = { '♠': 'Spades', '♥': 'Hearts', '♦': 'Diamonds', '♣': 'Clubs' };
+const SEAT_NUMBERS = { 'West': 0, 'North': 1, 'East': 2, 'South': 3 };
+const CALL_HTMLS = {'Pass': 'P', 'Dbl': 'X', 'Rdbl': 'XX', '': ''};
+const BID_SUITS = ['♣', '♦', '♥', '♠', 'NT'];
 const SUIT_SYMBOLS = ['♠', '♥', '♦', '♣'];
 const SUIT_HTMLS = { '♠': '<ss></ss>', '♥': '<hs></hs>', '♦': '<ds></ds>', '♣': '<cs></cs>', 'NT': 'NT' };
 const ABBR_SUIT_HTMLS = { 'S': '<ss></ss>', 'H': '<hs></hs>', 'D': '<ds></ds>', 'C': '<cs></cs>', 'N': 'NT' };
+const ABBR_SUIT_SYMBOLS = { 'S': '♠', 'H': '♥', 'D': '♦', 'C': '♣', 'N': 'NT' };
+const SUIT_NUMBERS = { '♠': 0, '♥': 1, '♦': 2, '♣': 3, 'NT': 4 }
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 const RANK_VALUES = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
-const BID_SUITS = ['♣', '♦', '♥', '♠', 'NT'];
 
 // --- DOUBLE DUMMY SOLVER ---
 const worker = new Worker('worker.js');
-
-function solve(num, hands) {
-  handStrings = {};
-  for (let seat of BIDDER_SEATS) {
-    const suits = { '♠': [], '♥': [], '♦': [], '♣': [] };
-    hands[seat].forEach(card => suits[card.suit].push(card.rank));
-    handStrings[seat] = '';
-    for (const suit of SUIT_SYMBOLS) {
-      const joinedSuit = suits[suit].join('');
-      handStrings[seat] += (joinedSuit === '' ? '-' : joinedSuit) + ' ';
-    }
-  }
-  worker.postMessage([num, handStrings]);
-}
 
 // --- BOARD STATE ---
 class Board {
@@ -81,6 +71,13 @@ class Board {
   reset() {
     this.player = this.dealer;
     this.auction = [];
+    this.openingLeads = {};
+  }
+
+  isVulnerable(seat) {
+    return this.vulnerable === 'All' ||
+      (this.vulnerable === 'N-S' && ['North', 'South'].includes(seat)) ||
+      (this.vulnerable === 'E-W' && ['East', 'West'].includes(seat));
   }
 
   addBid(bid) {
@@ -94,10 +91,24 @@ class Board {
       this.auction[len - 2] === 'Pass' && this.auction[len - 3] === 'Pass';
   }
 
-  isVulnerable(seat) {
-    return this.vulnerable === 'All' ||
-      (this.vulnerable === 'N-S' && ['North', 'South'].includes(seat)) ||
-      (this.vulnerable === 'E-W' && ['East', 'West'].includes(seat));
+  getContract() {
+    if (!this.isAuctionOver()) return {level: 0};
+
+    // Find the contract.
+    const pos = this.auction.length - 1 -
+      [...this.auction].reverse().findIndex(bid => isRealBid(bid));
+    if (pos == this.auction.length) return {level: 0};
+    const contract = this.auction[pos];
+    const level = Number(contract.slice(0, 1));
+    const trump = contract.slice(1);
+    const doubled = [...this.auction.slice(pos + 1)].reverse()
+      .find(bid => ['Dbl', 'Rdbl'].includes(bid)) ?? '';
+
+    // Identify the declarer at the same side who first bid the trump suit.
+    const first = this.auction.findIndex((bid, i) => i % 2 == pos % 2 &&
+                                         bid.slice(1) === trump);
+    const declarer = BIDDER_SEATS[(SEAT_NUMBERS[this.dealer] + first) % 4];
+    return {level, trump, doubled, declarer};
   }
 
   load() {
@@ -120,6 +131,34 @@ class Board {
     this.auction = object.auction;
     this.note = object.note;
     this.dd = object.dd;
+    this.openingLeads = object.openingLeads;
+  }
+
+  #toHandStrings() {
+    const handStrings = {};
+    for (let seat of BIDDER_SEATS) {
+      const suits = { '♠': [], '♥': [], '♦': [], '♣': [] };
+      this.hands[seat].forEach(card => suits[card.suit].push(card.rank));
+      handStrings[seat] = '';
+      for (const suit of SUIT_SYMBOLS) {
+        const joinedSuit = suits[suit].join('');
+        handStrings[seat] += (joinedSuit === '' ? '-' : joinedSuit) + ' ';
+      }
+    }
+    return handStrings;
+  }
+
+  solve() {
+    worker.postMessage(['solve', this.num, this.#toHandStrings()]);
+  }
+
+  solveLeads() {
+    const {level, trump, doubled, declarer} = this.getContract();
+    if (level == 0) return;
+
+    const lead_seat = (SEAT_NUMBERS[declarer] + 1) % 4;
+    worker.postMessage(['solve_leads', this.num, this.#toHandStrings(),
+      level, SUIT_NUMBERS[trump], lead_seat]);
   }
 }
 
@@ -128,19 +167,41 @@ let currentBoard = -1;
 let boards = [];
 
 worker.onmessage = function(event) {
-  if (event.data === 'Ready') {
-    initialize();
-    return;
-  }
-  const num = event.data[0];
-  const result = event.data[1];
+  const type = event.data[0];
+  const num = event.data[1];
+  const result = event.data[2];
   const board = boards[num];
-  board.dd = result.split('\n');
-  board.save();
 
-  if (board.isAuctionOver() && currentBoard == num) {
-    // Delayed rendering.
-    renderDoubleDummyResults();
+  switch (type) {
+    case 'ready':
+      initialize();
+      break;
+
+    case 'solve':
+      board.dd = result.split('\n');
+      board.save();
+
+      if (board.isAuctionOver() && currentBoard == num) {
+        // Delayed rendering.
+        renderDoubleDummyResults();
+      }
+      break;
+
+    case 'solve_leads':
+      board.openingLeads = {};
+      for (const lead of result.split(' ')) {
+        const [card, tricks] = lead.split(':');
+        const suit = ABBR_SUIT_SYMBOLS[card[0]];
+        const rank = card[1] === 'T' ? '10' : card[1];
+        board.openingLeads[suit + rank] = tricks;
+      }
+      board.save();
+
+      if (board.isAuctionOver() && currentBoard == num) {
+        // Delayed rendering.
+        renderOpeningLeads();
+      }
+      break;
   }
 }
 
@@ -206,7 +267,10 @@ function loadBoards() {
     if (!board.load()) break;
     if (board.dd == null || board.dd.length == 0) {
       // In case the previous solve was stopped by page refresh.
-      solve(board.num, board.hands);
+      board.solve();
+    }
+    if (board.openingLeads == null || board.openingLeads.length == 0) {
+      board.solveLeads();
     }
     boards.push(board);
   }
@@ -231,7 +295,7 @@ function prevBoard() {
 function nextBoard() {
   if (currentBoard == boards.length - 1) {
     const board = new Board(boards.length);
-    solve(board.num, board.hands);
+    board.solve();
     board.save();
     boards.push(board);
   }
@@ -260,9 +324,10 @@ function showBoard() {
   // Hands
   tableEl.style.minHeight = pairPractice ? '140px' : '280px';
   for (seat of BIDDER_SEATS) {
-    renderHand(seat, board.hands[seat], handEls[seat]);
+    renderHand(seat);
   }
   noteEl.innerHTML = board.note;
+  contractEl.innerHTML = '';
   ddResultsEl.innerHTML = '';
 
   // Auction
@@ -327,6 +392,7 @@ function handleBid(bid) {
   board.addBid(bid);
   board.save();
   if (board.isAuctionOver()) {
+    board.solveLeads();
     endAuction();
     return;
   }
@@ -338,22 +404,62 @@ function endAuction() {
   for (button of document.getElementsByClassName('bid-btn')) {
     button.style.display = 'none';
   }
-  revealFinalHands();
+  // Reveal all hands
+  for (seat of BIDDER_SEATS) {
+    handEls[seat].style.display = 'block';
+  }
+  renderContract();
+  renderOpeningLeads();
   renderDoubleDummyResults();
   renderSingleDummyResults();
 }
 
-function revealFinalHands() {
-  for (seat of BIDDER_SEATS) {
-    handEls[seat].style.display = 'block';
-  }
-  ddResultsEl.style.display = 'block';
-}
-
 // --- RENDERING FUNCTIONS ---
 
-function renderHand(seat, hand, targetEl) {
+function renderContract() {
   const board = boards[currentBoard];
+  const {level, trump, doubled, declarer} = board.getContract();
+  contractEl.innerHTML =
+    level == 0 ? 'Passed out' : level + SUIT_HTMLS[trump] +
+    CALL_HTMLS[doubled] + '&nbsp;by ' + declarer;
+}
+
+function renderTricks(tricks) {
+  if (tricks == 0) return '<sub class="tricks equal">=</sub>';
+  if (tricks >= 1) return '<sub class="tricks plus">+' + tricks + '</sub>';
+  if (tricks <= -1) return '<sub class="tricks minus">' + tricks + '</sub>';
+}
+
+function renderCard(suit, rank, tricks) {
+  return '<td>' +
+    (rank === '10' ? '<font style="letter-spacing:-3px">1</font>0' :
+      rank === 'J' && !smallScreen ? '&hairsp;J' : rank) +
+    (tricks ? '<sub class="tricks">' + renderTricks(Number(tricks)) + '</sub>' : '') +
+    '</td>';
+}
+
+function renderSuit(suit, cards, leads) {
+  let prev_tricks = '';
+  let html = '<table class="suit">' + '<tr><td>' + SUIT_HTMLS[suit] + '</td>';
+  for (rank of cards) {
+    if ((suit + rank) in leads) {
+      // Show trick info once when it's the same for neighboring cards.
+      const new_tricks = leads[suit + rank];
+      if (new_tricks != prev_tricks) {
+        html += renderCard(suit, rank, new_tricks);
+        prev_tricks = new_tricks;
+        continue;
+      }
+    }
+    html += renderCard(suit, rank, '');
+  }
+  return html + '</tr></table>';
+}
+
+function renderHand(seat, leads = []) {
+  const board = boards[currentBoard];
+  const hand = board.hands[seat];
+  const targetEl = handEls[seat];
   targetEl.innerHTML = '';
 
   const nameContainer = document.createElement('div');
@@ -365,17 +471,8 @@ function renderHand(seat, hand, targetEl) {
   hand.forEach(card => suits[card.suit].push(card.rank));
 
   for (const suit of SUIT_SYMBOLS) {
-    const len = suits[suit].length;
-    let cards = spaceCards(len > 0 ? suits[suit].join(' ') : '-');
-    const threshold = (smallScreen ? 6 : 7);
-    if (len >= threshold) {
-      const space = threshold - len;
-      cards = '<font style="letter-spacing:' + space + 'px">' + cards + '</font>';
-    }
-    const gap = (smallScreen ? '&hairsp;' : '&nbsp;')
     const suitContainer = document.createElement('div');
-    suitContainer.className = 'suit';
-    suitContainer.innerHTML = gap + SUIT_HTMLS[suit] + gap + cards;
+    suitContainer.innerHTML = renderSuit(suit, suits[suit], leads);
     targetEl.appendChild(suitContainer);
   }
 }
@@ -462,6 +559,17 @@ function renderRowOfPairs(line, count, allowDelta = false) {
     }
   }
   return html + '</tr>';
+}
+
+function renderOpeningLeads() {
+  const board = boards[currentBoard];
+  if (board.openingLeads == null || board.openingLeads.length == 0) return;
+
+  const {level, trump, doubled, declarer} = board.getContract();
+  if (level == 0) return;
+
+  const lead_seat = BIDDER_SEATS[(SEAT_NUMBERS[declarer] + 1) % 4];
+  renderHand(lead_seat, board.openingLeads);
 }
 
 function renderDoubleDummyResults() {
@@ -616,16 +724,4 @@ function nextPlayer(player) {
   return (player === 'West' ? 'North' :
           player === 'North' ? 'East' :
           player === 'East' ? 'South' : 'West');
-}
-
-function spaceCards(suit) {
-  if (smallScreen) {
-    return suit.replace(/' '/g, '&hairsp;')
-      .replace(/\bJ\b/g, '&hairsp;J&hairsp;')
-      .replace(/\b(T|10)\b/g, '<font style="letter-spacing:-3px">1</font>0');
-  } else {
-    return suit.replace(/' '/g, '&thinsp;')
-      .replace(/\bJ\b/g, '&hairsp;&hairsp;J&hairsp;')
-      .replace(/\b(T|10)\b/g, '<font style="letter-spacing:-2px">1</font>0');
-  }
 }

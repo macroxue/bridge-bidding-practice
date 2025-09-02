@@ -1,9 +1,27 @@
 @font-face { font-family: DejaVu; src: url('DejaVu.ttf'); }
 body { font-family: DejaVu; font-weight: bold; }
 
-#board-num { text-align:center; width: 64px; }
-#auction { border: 1px solid lightgrey; height: 124px; overflow: auto; }
+/* Bridge board */
+#board-num { text-align: center; width: 64px; }
+#contract { display: flex; align-items: center; justify-content: center; }
+.hand { background-color: #eee; border: 1px solid lightgrey; }
+.bids { font-weight: normal; text-align: center; }
+#auction { border: 1px solid lightgrey; height: 132px; overflow: auto; }
+#note { border: 1px solid #eed; background-color: #ffe; padding: 3px; }
 #bidding-controls { overflow: auto; }
+
+/* Overlay tricks to the center-bottom of the card */
+.suit td { position: relative; }
+.tricks {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+}
+.equal { color: green; }
+.plus { color: green; letter-spacing:-1px; }
+.minus { color: red; }
 
 /* Buttons */
 button { border-radius: 24px; color: white; height: 50px; }
@@ -24,7 +42,7 @@ button { border-radius: 24px; color: white; height: 50px; }
   opacity: 0.6;
 }
 
-/* Board state */
+/* Vulnerability */
 .red-name {
   background-color: #a00;
   border: 1px solid #800;
@@ -37,9 +55,6 @@ button { border-radius: 24px; color: white; height: 50px; }
   color:black;
   text-align: center;
 }
-.bids { font-weight: normal; text-align: center; }
-.hand { background-color: #eee; border: 1px solid lightgrey; }
-#note { border: 1px solid #eed; background-color: #ffe; padding: 3px; }
 
 /* Suit symbols */
 ss:before { color: black; content: '♠'; }
