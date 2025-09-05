@@ -1,6 +1,7 @@
 const pairPractice = (new URLSearchParams(window.location.search)).has('p');
 const clearStorage = (new URLSearchParams(window.location.search)).has('c');
 const doubleDummy = (new URLSearchParams(window.location.search)).has('d');
+const hideInvalidBids = (new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
 // --- DOM ELEMENTS ---
@@ -537,8 +538,11 @@ function renderBiddingControls() {
       const button = document.createElement('button');
       button.innerHTML = level + SUIT_HTMLS[suit];
       button.className = 'grey-btn transition-colors duration-200';
-      // button.style.display = (bidValue <= lastBidValue ? 'none' : 'block');
-      button.disabled = (bidValue <= lastBidValue);
+      if (hideInvalidBids) {
+        button.style.display = (bidValue <= lastBidValue ? 'none' : 'block');
+      } else {
+        button.disabled = (bidValue <= lastBidValue);
+      }
       button.onclick = () => handleBid(bidString);
       biddingGridEl.appendChild(button);
     });
