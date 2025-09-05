@@ -6,6 +6,7 @@ body { font-family: DejaVu; font-weight: bold; }
 #contract { display: flex; align-items: center; justify-content: center; }
 .hand { background-color: #eee; border: 1px solid lightgrey; }
 .bids { font-weight: normal; text-align: center; }
+.bid:hover { cursor: url('cross.png'), auto; }
 #auction { border: 1px solid lightgrey; height: 132px; overflow: auto; }
 #note { border: 1px solid #eed; background-color: #ffe; padding: 3px; }
 #bidding-controls { overflow: auto; }
@@ -27,13 +28,13 @@ body { font-family: DejaVu; font-weight: bold; }
 button { border-radius: 24px; color: white; height: 50px; }
 .nav-btn { width: 100px; }
 
-.red-btn { background-color: #a00; color:white; }
+.red-btn { background-color: #a00; color: white; }
 .red-btn:hover { background-color: #d00; }
-.green-btn { background-color: #080; color:white; }
+.green-btn { background-color: #080; color: white; }
 .green-btn:hover { background-color: #0c0; }
-.blue-btn { background-color: #008; color:white; }
+.blue-btn { background-color: #008; color: white; }
 .blue-btn:hover { background-color: #00f; }
-.grey-btn { background-color: #eee; color:black; }
+.grey-btn { background-color: #eee; color: black; }
 .grey-btn:hover { background-color: #ccc; }
 .red-btn:disabled, .green-btn:disabled, .blue-btn:disabled, .grey-btn:disabled {
   background-color: #444;

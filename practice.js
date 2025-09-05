@@ -85,6 +85,11 @@ class Board {
     this.player = nextPlayer(this.player);
   }
 
+  retractBid(index) {
+    this.auction.length = index;
+    this.player = BIDDER_SEATS[(SEAT_NUMBERS[this.dealer] + index) % 4]
+  }
+
   isAuctionOver() {
     const len = this.auction.length;
     return len >= 4 && this.auction[len - 1] === 'Pass' &&
@@ -337,15 +342,15 @@ function showBoard() {
   }
   for (seat of BIDDER_SEATS) {
     if (seat !== board.dealer)
-      bidsEls[seat].innerHTML = '<br>';
+      bidsEls[seat].innerHTML = '<div>&nbsp;</div>';
     else
       break;
   }
   let player = board.dealer;
-  for (bid of board.auction) {
-    showBid(player, bid);
+  board.auction.forEach((bid, index) => {
+    showBid(player, bid, index);
     player = nextPlayer(player);
-  }
+  });
 
   if (board.isAuctionOver()) {
     endAuction();
@@ -370,7 +375,7 @@ function takeTurn() {
   }
 }
 
-function showBid(player, bid) {
+function showBid(player, bid, index) {
   let bidHtml = '';
   if (bid === 'Pass') bidHtml = 'P';
   else if (bid === 'Dbl') bidHtml = 'X';
@@ -380,7 +385,15 @@ function showBid(player, bid) {
     const suitHtml = '♠♥♦♣'.includes(suit) ? SUIT_HTMLS[suit] : '';
     bidHtml = suitHtml !== '' ? bid[0] + suitHtml : bid;
   }
-  bidsEls[player].innerHTML += bidHtml + '<br>';
+  const bidContainer = document.createElement('div');
+  bidContainer.className = 'bid';
+  bidContainer.innerHTML = bidHtml;
+  bidContainer.onclick = () => {
+    boards[currentBoard].retractBid(index);
+    boards[currentBoard].save();
+    showBoard();
+  };
+  bidsEls[player].appendChild(bidContainer);
   // Scroll to bottom to show the latest bid.
   auctionEl.scrollTop = auctionEl.scrollHeight;
 }
@@ -388,7 +401,7 @@ function showBid(player, bid) {
 function handleBid(bid) {
   retryBtn.disabled = false;
   const board = boards[currentBoard];
-  showBid(board.player, bid);
+  showBid(board.player, bid, board.auction.length);
   board.addBid(bid);
   board.save();
   if (board.isAuctionOver()) {
