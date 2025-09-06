@@ -463,6 +463,7 @@ function renderSuit(suit, cards, leads) {
     }
     html += renderCard(suit, rank, '');
   }
+  if (cards.length == 0) html += '<td>&ndash;</td>';
   return html + '</tr></table>';
 }
 
