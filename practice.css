@@ -1,5 +1,6 @@
 @font-face { font-family: DejaVu; src: url('DejaVu.ttf'); }
 body { font-family: DejaVu; font-weight: bold; }
+table { white-space: nowrap; }
 
 /* Bridge board */
 #board-num { text-align: center; width: 64px; }
@@ -67,9 +68,9 @@ cs:before { color: black; content: '♣'; }
 table.dd, table.sd {
   border: 1px solid lightgrey;
   font-size: 90%;
+  line-height: 136%;
   margin:auto;
   text-align: center;
 }
-table.dd th, table.sd th { background-color: #eee; }
-table.dd td { min-width: 25px; }
-table.sd td { min-width: 40px; }
+table.dd th { background-color: #eee; }
+table.dd th, table.dd td { min-width: 30px; padding-left: 3px; padding-right: 3px; }

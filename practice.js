@@ -549,6 +549,17 @@ function renderBiddingControls() {
   }
 }
 
+function renderOpeningLeads() {
+  const board = boards[currentBoard];
+  if (board.openingLeads == null || board.openingLeads.length == 0) return;
+
+  const {level, trump, doubled, declarer} = board.getContract();
+  if (level == 0) return;
+
+  const lead_seat = BIDDER_SEATS[(SEAT_NUMBERS[declarer] + 1) % 4];
+  renderHand(lead_seat, board.openingLeads);
+}
+
 function mergeNumbers(x, y, allowDelta) {
   if (allowDelta) {
     if (x.includes('.')) {
@@ -570,23 +581,12 @@ function renderRowOfPairs(line, count, allowDelta = false) {
   for (let i = 1; i < items.length; i += 2) {
     const new_items = mergeNumbers(items[i], items[i + 1], allowDelta);
     if (new_items.length == 1) {
-      html += '<td colspan=2 style="min-width:40px">' + new_items[0] + '</td>';
+      html += '<td>' + new_items[0] + '</td>';
     } else {
-      html += '<td>' + items[i] + '</td><td>' + items[i + 1] + '</td>';
+      html += '<td>' + items[i] + '-' + items[i + 1] + '</td>';
     }
   }
   return html + '</tr>';
-}
-
-function renderOpeningLeads() {
-  const board = boards[currentBoard];
-  if (board.openingLeads == null || board.openingLeads.length == 0) return;
-
-  const {level, trump, doubled, declarer} = board.getContract();
-  if (level == 0) return;
-
-  const lead_seat = BIDDER_SEATS[(SEAT_NUMBERS[declarer] + 1) % 4];
-  renderHand(lead_seat, board.openingLeads);
 }
 
 function renderDoubleDummyResults() {
@@ -596,8 +596,8 @@ function renderDoubleDummyResults() {
   let html = `<table class="dd">
   <tr>
     <th></th>
-    <th colspan=2><abbr title="Double-dummy tricks by South or North">S-N</abbr></th>
-    <th colspan=2><abbr title="Double-dummy tricks by West or East">W-E</abbr></th>
+    <th><abbr title="Double-dummy tricks by South or North">S-N</abbr></th>
+    <th><abbr title="Double-dummy tricks by West or East">W-E</abbr></th>
   </tr>`;
   for (const line of board.dd.slice(0, 5)) {
     html += renderRowOfPairs(line, 5);
@@ -613,13 +613,13 @@ function renderSingleDummyResults() {
     return;
   }
 
-  let html = `<table class="sd col-span-full">
+  let html = `<table class="dd col-span-full">
   <tr>
     <th></th>
-    <th colspan=2><abbr title="Average tricks by South or North">S-N</abbr></th>`;
+    <th><abbr title="Average tricks by South or North">S-N</abbr></th>`;
   for (let t = 7; t <= 13; t++) {
-    const hint = `Percentage of taking ${t} tricks or more`;
-    html += `<th colspan=2><abbr title="${hint}">${t}</abbr></th>`;
+    const hint = `Percentage of taking at least ${t} tricks by South or North`;
+    html += `<th><abbr title="${hint}">${t}</abbr></th>`;
   }
   html += '</tr>';
   for (const line of board.dd.slice(6, 11)) {
@@ -628,10 +628,10 @@ function renderSingleDummyResults() {
   html += `</tr>
   <tr>
     <th></th>
-    <th colspan=2><abbr title="Average tricks by West or East">W-E</abbr></th>`;
+    <th><abbr title="Average tricks by West or East">W-E</abbr></th>`;
   for (let t = 7; t <= 13; t++) {
-    const hint = `Percentage of taking ${t} tricks or more`;
-    html += `<th colspan=2><abbr title="${hint}">${t}</abbr></th>`;
+    const hint = `Percentage of taking at least ${t} tricks by West or East`;
+    html += `<th><abbr title="${hint}">${t}</abbr></th>`;
   }
   html += '</tr>';
   for (const line of board.dd.slice(12, 17)) {

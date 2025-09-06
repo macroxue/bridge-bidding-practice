@@ -9,51 +9,48 @@
     <link rel="icon" href='pass.png'>
   </head>
   <body class='bg-gray-100 flex justify-center'>
-    <div class='w-full max-w-4xl bg-white p-3 md:p-6'>
-      <!-- Game Section -->
-      <div id='game-section'>
-        <div class='flex justify-between items-center mb-4 border-b pb-4 gap-3'>
-          <button id='retry' class='nav-btn red-btn transition-colors duration-200'>Retry</button>
-          <button id='first' class='nav-btn blue-btn transition-colors duration-200'>First</button>
-          <button id='last' class='nav-btn blue-btn transition-colors duration-200'>Last</button>
-          <button id='prev' class='nav-btn green-btn transition-colors duration-200'>Prev</button>
-          <div id='board-num' class='text-2xl' contenteditable='true'></div>
-          <button id='next' class='nav-btn green-btn transition-colors duration-200'>Next</button>
+    <div id='board' class='w-full max-w-4xl bg-white p-3 md:p-6'>
+      <div class='flex justify-between items-center mb-4 border-b pb-4 gap-3'>
+        <button id='retry' class='nav-btn red-btn transition-colors duration-200'>Retry</button>
+        <button id='first' class='nav-btn blue-btn transition-colors duration-200'>First</button>
+        <button id='last' class='nav-btn blue-btn transition-colors duration-200'>Last</button>
+        <button id='prev' class='nav-btn green-btn transition-colors duration-200'>Prev</button>
+        <div id='board-num' class='text-2xl' contenteditable='true'></div>
+        <button id='next' class='nav-btn green-btn transition-colors duration-200'>Next</button>
+      </div>
+
+      <div id='table' class='grid grid-cols-3 gap-2 md:gap-3'>
+        <!-- Row -->
+        <div id='contract'></div>
+        <div><div id='north-hand' class='hand'></div></div>
+        <div></div>
+
+        <!-- Row -->
+        <div><div id='west-hand' class='hand'></div></div>
+        <div id='auction' class='grid grid-cols-4 gap-0 content-start'>
+          <div id='west-name' class='white-name'>W</div>
+          <div id='north-name' class='white-name'>N</div>
+          <div id='east-name' class='white-name'>E</div>
+          <div id='south-name' class='white-name'>S</div>
+          <div id='west-bids' class='bids'></div>
+          <div id='north-bids' class='bids'></div>
+          <div id='east-bids' class='bids'></div>
+          <div id='south-bids' class='bids'></div>
         </div>
+        <div><div id='east-hand' class='hand'></div></div>
 
-        <div id='table' class='grid grid-cols-3 gap-2 md:gap-3'>
-          <!-- Row -->
-          <div id='contract'></div>
-          <div><div id='north-hand' class='hand'></div></div>
-          <div></div>
+        <!-- Row -->
+        <div><div id='dd-results'></div></div>
+        <div><div id='south-hand' class='hand'></div></div>
+        <div></div>
 
-          <!-- Row -->
-          <div><div id='west-hand' class='hand'></div></div>
-          <div id='auction' class='grid grid-cols-4 gap-0 content-start'>
-            <div id='west-name' class='white-name'>W</div>
-            <div id='north-name' class='white-name'>N</div>
-            <div id='east-name' class='white-name'>E</div>
-            <div id='south-name' class='white-name'>S</div>
-            <div id='west-bids' class='bids'></div>
-            <div id='north-bids' class='bids'></div>
-            <div id='east-bids' class='bids'></div>
-            <div id='south-bids' class='bids'></div>
-          </div>
-          <div><div id='east-hand' class='hand'></div></div>
+      </div>
+      <div id='note' class='col-span-full mt-3' contenteditable='true'></div>
 
-          <!-- Row -->
-          <div><div id='dd-results'></div></div>
-          <div><div id='south-hand' class='hand'></div></div>
-          <div></div>
-
-        </div>
-        <div id='note' class='col-span-full mt-3' contenteditable='true'></div>
-
-        <!-- Bidding Controls -->
-        <div id='bidding-controls' class='mt-4'>
-          <div id='bidding-grid' class='grid grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-3'>
-            <!-- Bidding buttons will be injected here -->
-          </div>
+      <!-- Bidding Controls -->
+      <div id='bidding-controls' class='mt-3'>
+        <div id='bidding-grid' class='grid grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-3'>
+          <!-- Bidding buttons will be injected here -->
         </div>
       </div>
     </div>
