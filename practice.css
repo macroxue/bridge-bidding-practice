@@ -7,7 +7,7 @@ table { white-space: nowrap; }
 #contract { display: flex; align-items: center; justify-content: center; }
 .hand { background-color: #eee; border: 1px solid lightgrey; }
 .bids { font-weight: normal; text-align: center; }
-.bid:hover { cursor: url('cross.png'), auto; }
+.bid:hover { background-color: #fee; cursor: url('cross.png'), auto; }
 #auction { border: 1px solid lightgrey; height: 132px; overflow: auto; }
 #note { border: 1px solid #eed; background-color: #ffe; padding: 3px; }
 #bidding-controls { overflow: auto; }

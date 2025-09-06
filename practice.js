@@ -5,7 +5,6 @@ const hideInvalidBids = (new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
 // --- DOM ELEMENTS ---
-const retryBtn = document.getElementById('retry');
 const firstBtn = document.getElementById('first');
 const lastBtn = document.getElementById('last')
 const prevBtn = document.getElementById('prev');
@@ -212,7 +211,6 @@ worker.onmessage = function(event) {
 }
 
 function initialize() {
-  retryBtn.addEventListener('click', retryBoard);
   firstBtn.addEventListener('click', firstBoard);
   lastBtn.addEventListener('click', lastBoard);
   prevBtn.addEventListener('click', prevBoard);
@@ -322,7 +320,6 @@ function showBoard() {
   lastBtn.disabled = board.num == boards.length - 1;
   prevBtn.disabled = board.num == 0;
   nextBtn.disabled = board.num == MAX_BOARDS - 1;
-  retryBtn.disabled = board.auction.length == 0;
 
   // Info
   boardNumEl.innerHTML = board.num + 1;
@@ -400,7 +397,6 @@ function showBid(player, bid, index) {
 }
 
 function handleBid(bid) {
-  retryBtn.disabled = false;
   const board = boards[currentBoard];
   showBid(board.player, bid, board.auction.length);
   board.addBid(bid);
