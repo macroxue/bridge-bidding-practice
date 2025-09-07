@@ -473,7 +473,8 @@ function renderHand(seat, leads = []) {
   targetEl.innerHTML = '';
 
   const nameContainer = document.createElement('div');
-  nameContainer.className = board.isVulnerable(seat) ? 'red-name' : 'white-name';
+  nameContainer.className = 'seat ' +
+    (board.isVulnerable(seat) ? 'red-name' : 'white-name');
   nameContainer.innerHTML = seat + ' (' + calcHandHcp(hand) + ')';
   targetEl.appendChild(nameContainer);
 

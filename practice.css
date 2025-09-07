@@ -5,6 +5,7 @@ table { white-space: nowrap; }
 /* Bridge board */
 #board-num { text-align: center; width: 64px; }
 #contract { display: flex; align-items: center; justify-content: center; }
+.seat { white-space: nowrap; }
 .hand { background-color: #eee; border: 1px solid lightgrey; }
 .bids { font-weight: normal; text-align: center; }
 .bid:hover { background-color: #fee; cursor: url('cross.png'), auto; }
@@ -65,7 +66,7 @@ ds:before { color: #dd0000; content: '♦'; }
 cs:before { color: black; content: '♣'; }
 
 /* Double dummy */
-table.dd, table.sd {
+table.dd {
   border: 1px solid lightgrey;
   font-size: 90%;
   line-height: 136%;
