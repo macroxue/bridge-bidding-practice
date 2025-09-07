@@ -16,14 +16,14 @@ table { white-space: nowrap; }
 .suit td { position: relative; }
 .tricks {
   position: absolute;
-  bottom: 0;
+  bottom: 0px;
   left: 50%;
   transform: translateX(-50%);
-  font-weight: bold;
+  font-size: 75%;
 }
 .equal { color: green; }
-.plus { color: green; letter-spacing:-1px; }
-.minus { color: red; }
+.plus { color: green; letter-spacing: -2px; }
+.minus { color: red; letter-spacing: -1px; }
 
 /* Buttons */
 button { border-radius: 24px; color: white; height: 50px; }

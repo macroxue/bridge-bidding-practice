@@ -437,15 +437,14 @@ function renderContract() {
 function renderTricks(tricks) {
   if (tricks == 0) return '<sub class="tricks equal">=</sub>';
   if (tricks >= 1) return '<sub class="tricks plus">+' + tricks + '</sub>';
-  if (tricks <= -1) return '<sub class="tricks minus">' + tricks + '</sub>';
+  if (tricks <= -1) return '<sub class="tricks minus">&ndash;' + -tricks + '</sub>';
 }
 
 function renderCard(suit, rank, tricks) {
   return '<td>' +
     (rank === '10' ? '<font style="letter-spacing:-3px">1</font>0' :
-      rank === 'J' && !smallScreen ? '&hairsp;J' : rank) +
-    (tricks ? '<sub class="tricks">' + renderTricks(Number(tricks)) + '</sub>' : '') +
-    '</td>';
+      rank === 'J' ? '&hairsp;J&hairsp;' : rank) +
+    (tricks ? renderTricks(Number(tricks)) : '') + '</td>';
 }
 
 function renderSuit(suit, cards, leads) {
