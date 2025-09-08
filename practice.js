@@ -5,6 +5,8 @@ const hideInvalidBids = !(new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
 // --- DOM ELEMENTS ---
+const notedChk = document.getElementById('noted');
+const endedChk = document.getElementById('ended');
 const firstBtn = document.getElementById('first');
 const lastBtn = document.getElementById('last')
 const prevBtn = document.getElementById('prev');
@@ -211,6 +213,8 @@ worker.onmessage = function(event) {
 }
 
 function initialize() {
+  notedChk.checked = false;
+  endedChk.checked = false;
   firstBtn.addEventListener('click', firstBoard);
   lastBtn.addEventListener('click', lastBoard);
   prevBtn.addEventListener('click', prevBoard);
@@ -250,21 +254,6 @@ function initialize() {
   }
 }
 
-function pickStartingBoard() {
-  if (boards.length == 0) {
-    nextBoard();
-    return;
-  }
-
-  // Show the first unfinished board or the last board if all finished.
-  currentBoard = 0;
-  for (let board of boards) {
-    if (!board.isAuctionOver()) break;
-    if (currentBoard < boards.length - 1) currentBoard++;
-  }
-  showBoard();
-}
-
 function loadBoards() {
   for (let num = 0; ; num++) {
     let board = new Board(num);
@@ -280,44 +269,70 @@ function loadBoards() {
   }
 }
 
-function firstBoard() {
+// --- BOARD NAVIGATION ---
+function pickStartingBoard() {
+  if (boards.length == 0) {
+    nextBoard();
+    return;
+  }
+
+  // Show the first unfinished board or the last board if all finished.
   currentBoard = 0;
+  for (let board of boards) {
+    if (!board.isAuctionOver()) break;
+    if (currentBoard < boards.length - 1) currentBoard++;
+  }
   showBoard();
 }
 
-function lastBoard() {
-  currentBoard = boards.length - 1;
-  showBoard();
-}
-
-function prevBoard() {
-  if (currentBoard == 0) return;
-  currentBoard--;
-  showBoard();
-}
+function firstBoard() { forwardSearchBoard(0); }
+function lastBoard() { backwardSearchBoard(boards.length - 1); }
+function prevBoard() { backwardSearchBoard(currentBoard - 1); }
 
 function nextBoard() {
-  if (currentBoard == boards.length - 1) {
-    const board = new Board(boards.length);
-    board.solve();
-    board.save();
-    boards.push(board);
+  if (!notedChk.checked && !endedChk.checked) {
+    if (currentBoard == boards.length - 1) {
+      const board = new Board(boards.length);
+      board.solve();
+      board.save();
+      boards.push(board);
+    }
+    currentBoard++;
+    showBoard();
+  } else {
+    forwardSearchBoard(currentBoard + 1);
   }
-  currentBoard++;
-  showBoard();
 }
 
-function retryBoard() {
-  const board = boards[currentBoard];
-  board.reset();
-  board.save();
-  showBoard();
+function isBoardInScope(board) {
+  return (!notedChk.checked || board.note !== '') &&
+    (!endedChk.checked || board.isAuctionOver());
+}
+
+function backwardSearchBoard(start) {
+  if (start == -1) start = currentBoard - 1;
+  for (let i = start; i >= 0; i--) {
+    if (isBoardInScope(boards[i])){
+      currentBoard = i;
+      showBoard();
+      break;
+    }
+  }
+}
+
+function forwardSearchBoard(start) {
+  if (start == -1) start = currentBoard + 1;
+  for (let i = start; i < boards.length; i++) {
+    if (isBoardInScope(boards[i])){
+      currentBoard = i;
+      showBoard();
+      break;
+    }
+  }
 }
 
 function showBoard() {
   const board = boards[currentBoard];
-  firstBtn.disabled = board.num == 0;
-  lastBtn.disabled = board.num == boards.length - 1;
   prevBtn.disabled = board.num == 0;
   nextBtn.disabled = board.num == MAX_BOARDS - 1;
 
@@ -425,7 +440,6 @@ function endAuction() {
 }
 
 // --- RENDERING FUNCTIONS ---
-
 function renderContract() {
   const board = boards[currentBoard];
   const {level, trump, doubled, declarer} = board.getContract();

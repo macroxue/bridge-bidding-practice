@@ -9,11 +9,23 @@
     <link rel="icon" href='steps.png'>
   </head>
   <body class='bg-gray-100 flex justify-center'>
-    <div id='board' class='w-full max-w-4xl bg-white p-3 md:p-6'>
-      <div class='flex justify-between items-center mb-4 border-b pb-4 gap-3'>
+    <div id='board' class='w-full max-w-4xl bg-white p-3 md:p-4'>
+      <div class='flex justify-between items-center mb-3 border-b pb-3 gap-3'>
         <a href='https://github.com/macroxue/bridge-bidding-practice'><img src='steps.png' width='64px'/></a>
         <button id='first' class='nav-btn blue-btn transition-colors duration-200'>First</button>
         <button id='last' class='nav-btn blue-btn transition-colors duration-200'>Last</button>
+        <table><tr><td>
+              <label class='toggle'>
+                <input id='noted' type="checkbox">
+                <span class='slider'>Noted</span>
+              </label>
+            </td></tr><tr><td>
+                <label class='toggle'>
+                  <input id='ended' type="checkbox">
+                  <span class='slider'>Ended</span>
+                </label>
+              </td></tr>
+        </table>
         <button id='prev' class='nav-btn green-btn transition-colors duration-200'>Prev</button>
         <div id='board-num' class='text-2xl' contenteditable='true'></div>
         <button id='next' class='nav-btn green-btn transition-colors duration-200'>Next</button>
