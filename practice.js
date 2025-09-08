@@ -1,7 +1,7 @@
 const pairPractice = (new URLSearchParams(window.location.search)).has('p');
 const clearStorage = (new URLSearchParams(window.location.search)).has('c');
 const doubleDummy = (new URLSearchParams(window.location.search)).has('d');
-const hideInvalidBids = (new URLSearchParams(window.location.search)).has('h');
+const hideInvalidBids = !(new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
 // --- DOM ELEMENTS ---
