@@ -160,6 +160,7 @@ class Board {
   }
 
   solveLeads() {
+    this.openingLeads = {};
     const {level, trump, doubled, declarer} = this.getContract();
     if (level == 0) return;
 
