@@ -750,6 +750,7 @@ function competeWith(oppContract, ddTricks, seats, vulnerable) {
   for (const strain of ['N', 'S', 'H', 'D', 'C']) {
     const tricks = STRAIN_RANKS[strain] > STRAIN_RANKS[oppContract.strain] ?
       oppContract.tricks : oppContract.tricks + 1;
+    if (tricks > 13) continue;
 
     let contract2 = null;
     for (const declarer of seats) {
