@@ -35,6 +35,7 @@ const auctionEl = document.getElementById('auction');
 const noteEl = document.getElementById('note');
 const biddingGridEl = document.getElementById('bidding-grid');
 const contractEl = document.getElementById('contract');
+const parScoreEl = document.getElementById('par-score');
 const ddResultsEl = document.getElementById('dd-results');
 
 // --- CONSTANTS ---
@@ -78,8 +79,8 @@ class Board {
 
   isVulnerable(seat) {
     return this.vulnerable === 'All' ||
-      (this.vulnerable === 'N-S' && ['North', 'South'].includes(seat)) ||
-      (this.vulnerable === 'E-W' && ['East', 'West'].includes(seat));
+      (this.vulnerable === 'N-S' && ['N', 'S'].includes(seat[0])) ||
+      (this.vulnerable === 'E-W' && ['E', 'W'].includes(seat[0]));
   }
 
   addBid(bid) {
@@ -347,6 +348,7 @@ function showBoard() {
   }
   noteEl.innerHTML = board.note;
   contractEl.innerHTML = '';
+  parScoreEl.innerHTML = '';
   ddResultsEl.innerHTML = '';
 
   // Auction
@@ -436,6 +438,7 @@ function endAuction() {
   }
   renderContract();
   renderOpeningLeads();
+  renderParScore();
   renderDoubleDummyResults();
   renderSingleDummyResults();
 }
@@ -651,6 +654,207 @@ function renderSingleDummyResults() {
   }
   biddingGridEl.innerHTML = html + '</table>';
 }
+
+// --- PAR SCORE ---
+function renderParScore() {
+  const [nsContracts, ewContracts] = computeParScore();
+
+  if (nsContracts.length == 0 && ewContracts.length == 0) {
+    parScoreEl.innerHTML = 'Par: 0';
+  } else {
+    parScoreEl.innerHTML =
+      (nsContracts.length > 0 ? renderParContracts(nsContracts) : '') +
+      (ewContracts.length > 0 ? renderParContracts(ewContracts) : '');
+  }
+}
+
+function renderParContracts(contracts) {
+  const parScore = contracts[0].scoreWithSacrifices;
+  const pars = contracts.filter(c => c.scoreWithSacrifices == parScore);
+
+  // Flatten embedded sacrifices.
+  const flatPars = [];
+  if (pars[0].sacrifices.length > 0) {
+    pars.forEach(c => c.sacrifices.forEach(s => {
+      if (-s.score == parScore) flatPars.push(s);
+    }));
+  } else {
+    pars.forEach(c => flatPars.push(c));
+  }
+
+  // Remove duplicates by keeping only one contract for each strain.
+  const uniquePars = [];
+  for (const strain of ['N', 'S', 'H', 'D', 'C']) {
+    uniquePars.push(...flatPars.filter(c => c.strain == strain).slice(0, 1));
+  }
+
+  let html = '<table>' + uniquePars[0].renderParScore();
+  uniquePars.forEach(c => html += c.renderContract());
+  return html + '</table>';
+}
+
+function computeParScore() {
+  const board = boards[currentBoard];
+  if (board.dd == null || board.dd.slice(0, 5).length == 0) return '';
+
+  const seats = ['S', 'N', 'W', 'E'];
+  const ddTricks = { 'S': {}, 'N': {}, 'W': {}, 'E': {} };
+  for (const line of board.dd.slice(0, 5)) {
+    const items = line.split(/\s+/).slice(0, 5);
+    const strain = items[0];
+    for (let pos = 0; pos < 4; pos++) {
+      const declarer = seats[pos];
+      const tricks = Number(items[pos + 1]);
+      ddTricks[declarer][strain] = tricks;
+    }
+  }
+
+  const nsContracts = [], ewContracts = [];
+  for (const strain of ['N', 'S', 'H', 'D', 'C']) {
+    nsContracts.push(...scanLevels(strain, ['N', 'S'], ddTricks));
+    ewContracts.push(...scanLevels(strain, ['E', 'W'], ddTricks));
+  }
+
+  // Highest scores first. For the same score, prefer the lowest contract.
+  const order = (a, b) => (a.scoreWithSacrifices != b.scoreWithSacrifices
+                           ? b.scoreWithSacrifices - a.scoreWithSacrifices
+                           : a.tricks - b.tricks);
+  return [nsContracts.sort(order), ewContracts.sort(order)];
+}
+
+function scanLevels(strain, declarers, ddTricks) {
+  const board = boards[currentBoard];
+  const maxTricks = Math.max(...declarers.map(d => ddTricks[d][strain]));
+  const trickDeclarers = declarers.filter(d => ddTricks[d][strain] == maxTricks);
+  const contracts = [];
+  for (let tricks = 7; tricks <= maxTricks; tricks++) {
+    const contract = new Contract(tricks, strain, maxTricks, trickDeclarers,
+                                  board.isVulnerable(declarers[0]));
+    const side = ['N', 'S'].includes(declarers[0]) ? ['N', 'S'] : ['E', 'W'];
+    const other_side = ['N', 'S'].includes(declarers[0]) ? ['E', 'W'] : ['N', 'S'];
+    const competitions = competeWith(contract, ddTricks, other_side,
+                                     board.isVulnerable(other_side[0]));
+    if (competitions.length == 0) {  // No competition
+      contracts.push(contract);
+    } else if (competitions[0].score > 0) {  // A higher and makable contract
+    } else {  // Sacrifice
+      contract.addSacrifices(competitions);
+      contracts.push(contract);
+    }
+  }
+  return contracts;
+}
+
+function competeWith(oppContract, ddTricks, seats, vulnerable) {
+  const contracts = [];
+  for (const strain of ['N', 'S', 'H', 'D', 'C']) {
+    const tricks = STRAIN_RANKS[strain] > STRAIN_RANKS[oppContract.strain] ?
+      oppContract.tricks : oppContract.tricks + 1;
+
+    let contract2 = null;
+    for (const declarer of seats) {
+      const contract1 = new Contract(tricks, strain, ddTricks[declarer][strain],
+                                     [declarer], vulnerable);
+      if (contract1.score > 0 ||  // A higher and makable contract
+          contract1.score > -oppContract.score) {  // Sacrifice
+        if (contract2 == null || contract1.score > contract2.score) {
+          contract2 = contract1;
+        } else if (contract1.score == contract2.score) {
+          contract2.addDeclarer(declarer);
+        }
+      }
+    }
+    if (contract2 != null) {
+      if (contract2.score > 0) return [contract2];
+      contracts.push(contract2);
+    }
+  }
+  return contracts.sort((a, b) => b.score - a.score);
+}
+
+const STRAIN_RANKS = { 'N': 4, 'S': 3, 'H': 2, 'D': 1, 'C': 0 };
+
+class Contract {
+  constructor(tricks, strain, actual_tricks, declarers, vulnerable) {
+    this.tricks = tricks;
+    this.strain = strain;
+    this.actual_tricks = actual_tricks;
+    this.declarers = declarers;
+    this.vulnerable = vulnerable;
+    this.rank = this.#rank();
+    this.score = this.#score();
+    this.sacrifices = [];
+    this.scoreWithSacrifices = this.score;
+  }
+
+  addDeclarer(newDeclarer) { this.declarers.push(newDeclarer); }
+
+  addSacrifices(sacrifices) {
+    this.sacrifices = sacrifices;
+    if (this.sacrifices.length > 0)
+      this.scoreWithSacrifices = -this.sacrifices[0].score;
+  }
+
+  renderParScore() {
+    return '<tr><td>Par: ' +
+      (['N', 'S'].includes(this.declarers[0]) ? 'NS' : 'EW') + ' ' +
+      this.#signed(this.score) + '</td></tr>';
+  }
+
+  renderContract() {
+    const diffTricks = this.actual_tricks - this.tricks;
+    return '<tr><td>' + (this.tricks - 6) + ABBR_SUIT_HTMLS[this.strain] +
+      (this.score < 0 ? 'X' : '') +
+      (diffTricks == 0 ? '=' : this.#signed(diffTricks)) + ' ' +
+      ' by ' + this.declarers.join('') + '</td></tr>';
+  }
+
+  #signed(number) {
+    return (number < 0 ? '' : '+') + number;
+  }
+
+  #rank() { return STRAIN_RANKS[this.strain] + this.tricks * 5; }
+
+  #score() {
+    const down_tricks = this.tricks - this.actual_tricks;
+    if (down_tricks > 0) {
+      if (this.vulnerable) {
+        return -(200 + (down_tricks - 1) * 300);
+      } else if (down_tricks <= 2) {
+        return -(100 + (down_tricks - 1) * 200);
+      } else {
+        return -(500 + (down_tricks - 3) * 300);
+      }
+    } else {
+      let score = this.#trickScore();
+      if (score < 100) score += 50;  // Part score
+      else score += this.vulnerable ? 500 : 300;  // Game
+      if (this.tricks == 12) score += this.vulnerable ?  750 :  500;  // Slam
+      if (this.tricks == 13) score += this.vulnerable ? 1500 : 1000;  // Grand
+      return score + this.#overtrickScore();
+    }
+  }
+
+  #trickScore() {
+    switch (this.strain) {
+      case 'N': return (this.tricks - 6) * 30 + 10;
+      case 'S':
+      case 'H': return (this.tricks - 6) * 30;
+      case 'D':
+      case 'C': return (this.tricks - 6) * 20;
+    }
+  }
+
+  #overtrickScore() {
+    switch (this.strain) {
+      case 'N':
+      case 'S':
+      case 'H': return (this.actual_tricks - this.tricks) * 30;
+      case 'D':
+      case 'C': return (this.actual_tricks - this.tricks) * 20;
+    }
+  }
+};
 
 // --- DOUBLE-DUMMY DATA ---
 function fetchDoubleDummy() {

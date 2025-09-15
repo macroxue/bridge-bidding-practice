@@ -3,7 +3,7 @@ body { font-family: DejaVu; font-weight: bold; }
 table { white-space: nowrap; }
 
 /* Bridge board */
-#contract { display: flex; align-items: center; justify-content: center; }
+#contract, #par-score { display: flex; align-items: center; justify-content: center; }
 .seat { white-space: nowrap; }
 .hand { background-color: #eee; border: 1px solid lightgrey; }
 .bids { font-weight: normal; text-align: center; }
