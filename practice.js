@@ -670,7 +670,9 @@ function renderParScore() {
 
 function renderParContracts(contracts) {
   const parScore = contracts[0].scoreWithSacrifices;
-  const pars = contracts.filter(c => c.scoreWithSacrifices == parScore);
+  const positiveScore = contracts[0].score;
+  const pars = contracts.filter(c => c.scoreWithSacrifices == parScore &&
+                                c.score == positiveScore);
 
   // Flatten embedded sacrifices.
   const flatPars = [];
@@ -715,10 +717,14 @@ function computeParScore() {
     ewContracts.push(...scanLevels(strain, ['E', 'W'], ddTricks));
   }
 
-  // Highest scores first. For the same score, prefer the lowest contract.
-  const order = (a, b) => (a.scoreWithSacrifices != b.scoreWithSacrifices
-                           ? b.scoreWithSacrifices - a.scoreWithSacrifices
-                           : a.tricks - b.tricks);
+  // Highest scores first. For the same score,
+  // 1) prefer the highest contract, if it's sacrificed;
+  // 2) prefer the lowest contract, otherwise.
+  const order = (a, b) => {
+    if (a.scoreWithSacrifices != b.scoreWithSacrifices)
+      return b.scoreWithSacrifices - a.scoreWithSacrifices;
+    return (a.sacrifices.length > 0 ? b.rank - a.rank : a.rank - b.rank);
+  }
   return [nsContracts.sort(order), ewContracts.sort(order)];
 }
 
