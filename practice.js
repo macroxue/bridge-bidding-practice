@@ -662,9 +662,10 @@ function renderParScore() {
   if (nsContracts.length == 0 && ewContracts.length == 0) {
     parScoreEl.innerHTML = 'Par: 0';
   } else {
-    parScoreEl.innerHTML =
+    parScoreEl.innerHTML = '<table>' +
       (nsContracts.length > 0 ? renderParContracts(nsContracts) : '') +
-      (ewContracts.length > 0 ? renderParContracts(ewContracts) : '');
+      (ewContracts.length > 0 ? renderParContracts(ewContracts) : '') +
+      '</table>';
   }
 }
 
@@ -690,9 +691,9 @@ function renderParContracts(contracts) {
     uniquePars.push(...flatPars.filter(c => c.strain == strain).slice(0, 1));
   }
 
-  let html = '<table>' + uniquePars[0].renderParScore();
+  let html = uniquePars[0].renderParScore();
   uniquePars.forEach(c => html += c.renderContract());
-  return html + '</table>';
+  return html;
 }
 
 function computeParScore() {
