@@ -670,9 +670,9 @@ function renderParScore() {
 
 function renderParContracts(contracts) {
   const parScore = contracts[0].scoreWithSacrifices;
-  const positiveScore = contracts[0].score;
+  const parContractRank = contracts[0].rank;
   const pars = contracts.filter(c => c.scoreWithSacrifices == parScore &&
-                                c.score == positiveScore);
+                                c.rank == parContractRank);
 
   // Flatten embedded sacrifices.
   const flatPars = [];
