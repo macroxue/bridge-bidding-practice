@@ -342,7 +342,7 @@ function showBoard() {
   boardNumEl.innerHTML = board.num + 1;
 
   // Hands
-  tableEl.style.minHeight = pairPractice ? '140px' : '280px';
+  tableEl.style.minHeight = pairPractice ? '144px' : '288px';
   for (seat of BIDDER_SEATS) {
     renderHand(seat);
   }
