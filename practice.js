@@ -672,12 +672,15 @@ function renderParScore() {
 function renderParContracts(contracts) {
   const parScore = contracts[0].scoreWithSacrifices;
   const parContractRank = contracts[0].rank;
+
+  // Par contracts must have par score (the highest score) and
+  // must be the highest contract if sacrificed.
   const pars = contracts.filter(c => c.scoreWithSacrifices == parScore &&
-                                c.rank == parContractRank);
+                                (!c.sacrifices.length || c.rank == parContractRank));
 
   // Flatten embedded sacrifices.
   const flatPars = [];
-  if (pars[0].sacrifices.length > 0) {
+  if (pars[0].sacrifices.length) {
     pars.forEach(c => c.sacrifices.forEach(s => {
       if (-s.score == parScore) flatPars.push(s);
     }));
@@ -724,7 +727,7 @@ function computeParScore() {
   const order = (a, b) => {
     if (a.scoreWithSacrifices != b.scoreWithSacrifices)
       return b.scoreWithSacrifices - a.scoreWithSacrifices;
-    return (a.sacrifices.length > 0 ? b.rank - a.rank : a.rank - b.rank);
+    return (a.sacrifices.length ? b.rank - a.rank : a.rank - b.rank);
   }
   return [nsContracts.sort(order), ewContracts.sort(order)];
 }
@@ -799,7 +802,7 @@ class Contract {
 
   addSacrifices(sacrifices) {
     this.sacrifices = sacrifices;
-    if (this.sacrifices.length > 0)
+    if (this.sacrifices.length)
       this.scoreWithSacrifices = -this.sacrifices[0].score;
   }
 
