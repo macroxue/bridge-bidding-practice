@@ -46,12 +46,10 @@ const VULNERABLES = [ 'None', 'N-S', 'E-W', 'All' ];
 const BIDDER_SEATS = [ 'West', 'North', 'East', 'South' ];
 const SEAT_NUMBERS = { 'West': 0, 'North': 1, 'East': 2, 'South': 3 };
 const CALL_HTMLS = {'Pass': 'P', 'Dbl': 'X', 'Rdbl': 'XX', '': ''};
-const BID_SUITS = ['♣', '♦', '♥', '♠', 'NT'];
-const SUIT_SYMBOLS = ['♠', '♥', '♦', '♣'];
-const SUIT_HTMLS = { '♠': '<ss></ss>', '♥': '<hs></hs>', '♦': '<ds></ds>', '♣': '<cs></cs>', 'NT': 'NT' };
-const ABBR_SUIT_HTMLS = { 'S': '<ss></ss>', 'H': '<hs></hs>', 'D': '<ds></ds>', 'C': '<cs></cs>', 'N': 'NT' };
-const ABBR_SUIT_SYMBOLS = { 'S': '♠', 'H': '♥', 'D': '♦', 'C': '♣', 'N': 'NT' };
-const SUIT_NUMBERS = { '♠': 0, '♥': 1, '♦': 2, '♣': 3, 'NT': 4 }
+const SUITS = ['S', 'H', 'D', 'C'];
+const STRAINS = ['N', 'S', 'H', 'D', 'C'];
+const STRAIN_RANKS = { 'N': 4, 'S': 3, 'H': 2, 'D': 1, 'C': 0 };
+const STRAIN_HTMLS = { 'N': 'NT', 'S': '<ss></ss>', 'H': '<hs></hs>', 'D': '<ds></ds>', 'C': '<cs></cs>' };
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 const RANK_VALUES = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
 
@@ -134,21 +132,48 @@ class Board {
     this.num = object.num;
     this.dealer = object.dealer;
     this.vulnerable = object.vulnerable;
-    this.hands = object.hands;
+    this.hands = this.#convertHands(object.hands);
     this.player = object.player;
-    this.auction = object.auction;
+    this.auction = this.#convertAuction(object.auction);
     this.note = object.note;
     this.dd = object.dd;
-    this.openingLeads = object.openingLeads;
+    this.openingLeads = this.#convertLeads(object.openingLeads);
+  }
+
+  #convertHands(hands) {
+    return {
+      'South': this.#convertHand(hands['South']),
+      'North': this.#convertHand(hands['North']),
+      'West': this.#convertHand(hands['West']),
+      'East': this.#convertHand(hands['East'])
+    };
+  }
+
+  #convertHand(hand) {
+    return hand.map(c => ({suit: Board.SUIT_CONVERSIONS[c.suit], rank: c.rank}));
+  }
+
+  #convertAuction(auction) {
+    return auction.map(b => '1234567'.includes(b[0]) ?
+                       b[0] + Board.SUIT_CONVERSIONS[b[1]] : b);
+  }
+
+  #convertLeads(leads) {
+    const newLeads = {};
+    for (const card in leads) {
+      const newCard = Board.SUIT_CONVERSIONS[card[0]] + card.slice(1);
+      newLeads[newCard] = leads[card];
+    }
+    return newLeads;
   }
 
   #toHandStrings() {
     const handStrings = {};
     for (let seat of BIDDER_SEATS) {
-      const suits = { '♠': [], '♥': [], '♦': [], '♣': [] };
+      const suits = { 'S': [], 'H': [], 'D': [], 'C': [] };
       this.hands[seat].forEach(card => suits[card.suit].push(card.rank));
       handStrings[seat] = '';
-      for (const suit of SUIT_SYMBOLS) {
+      for (const suit of SUITS) {
         const joinedSuit = suits[suit].join('');
         handStrings[seat] += (joinedSuit === '' ? '-' : joinedSuit) + ' ';
       }
@@ -167,8 +192,13 @@ class Board {
 
     const lead_seat = (SEAT_NUMBERS[declarer] + 1) % 4;
     worker.postMessage(['solve_leads', this.num, this.#toHandStrings(),
-      level, SUIT_NUMBERS[trump], lead_seat]);
+      level, Board.SUIT_NUMBERS[trump], lead_seat]);
   }
+
+  static SUIT_NUMBERS = { 'N': 4, 'S': 0, 'H': 1, 'D': 2, 'C': 3 };
+  static SUIT_CONVERSIONS = {
+    'N': 'N', 'S': 'S', 'H': 'H', 'D': 'D', 'C': 'C',
+    'NT': 'N', '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
 }
 
 // --- BOARD HISTORY ---
@@ -200,7 +230,7 @@ worker.onmessage = function(event) {
       board.openingLeads = {};
       for (const lead of result.split(' ')) {
         const [card, tricks] = lead.split(':');
-        const suit = ABBR_SUIT_SYMBOLS[card[0]];
+        const suit = card[0];
         const rank = card[1] === 'T' ? '10' : card[1];
         board.openingLeads[suit + rank] = tricks;
       }
@@ -392,18 +422,10 @@ function takeTurn() {
 }
 
 function showBid(player, bid, index) {
-  let bidHtml = '';
-  if (bid === 'Pass') bidHtml = 'P';
-  else if (bid === 'Dbl') bidHtml = 'X';
-  else if (bid === 'Rdbl') bidHtml = 'XX';
-  else {
-    const suit = bid[1];
-    const suitHtml = '♠♥♦♣'.includes(suit) ? SUIT_HTMLS[suit] : '';
-    bidHtml = suitHtml !== '' ? bid[0] + suitHtml : bid;
-  }
   const bidContainer = document.createElement('div');
   bidContainer.className = 'bid';
-  bidContainer.innerHTML = bidHtml;
+  bidContainer.innerHTML = '1234567'.includes(bid[0]) ?
+    bid[0] + STRAIN_HTMLS[bid[1]] : CALL_HTMLS[bid];
   bidContainer.onclick = () => {
     boards[currentBoard].retractBid(index);
     boards[currentBoard].save();
@@ -448,7 +470,7 @@ function renderContract() {
   const board = boards[currentBoard];
   const {level, trump, doubled, declarer} = board.getContract();
   contractEl.innerHTML =
-    level == 0 ? 'Passed out' : level + SUIT_HTMLS[trump] +
+    level == 0 ? 'Passed out' : level + STRAIN_HTMLS[trump] +
     CALL_HTMLS[doubled] + '&nbsp;by ' + declarer;
 }
 
@@ -467,7 +489,7 @@ function renderCard(suit, rank, tricks) {
 
 function renderSuit(suit, cards, leads) {
   let prev_tricks = '';
-  let html = '<table class="suit">' + '<tr><td>' + SUIT_HTMLS[suit] + '</td>';
+  let html = '<table class="suit">' + '<tr><td>' + STRAIN_HTMLS[suit] + '</td>';
   for (rank of cards) {
     if ((suit + rank) in leads) {
       // Show trick info once when it's the same for neighboring cards.
@@ -496,10 +518,10 @@ function renderHand(seat, leads = []) {
   nameContainer.innerHTML = seat + ' (' + calcHandHcp(hand) + ')';
   targetEl.appendChild(nameContainer);
 
-  const suits = { '♠': [], '♥': [], '♦': [], '♣': [] };
+  const suits = { 'S': [], 'H': [], 'D': [], 'C': [] };
   hand.forEach(card => suits[card.suit].push(card.rank));
 
-  for (const suit of SUIT_SYMBOLS) {
+  for (const suit of SUITS) {
     const suitContainer = document.createElement('div');
     suitContainer.innerHTML = renderSuit(suit, suits[suit], leads);
     targetEl.appendChild(suitContainer);
@@ -544,19 +566,19 @@ function renderBiddingControls() {
   }
 
   const lastRealBid = [...board.auction].reverse().find(b => isRealBid(b));
-  const lastBidValue = lastRealBid ? getBidValue(lastRealBid) : -1;
+  const lastBidRank = lastRealBid ? getBidRank(lastRealBid) : -1;
 
   for (let level = 1; level <= 7; level++) {
-    BID_SUITS.forEach(suit => {
+    [...STRAINS].reverse().forEach(suit => {
       const bidString = level + suit;
-      const bidValue = getBidValue(bidString);
+      const bidRank = getBidRank(bidString);
       const button = document.createElement('button');
-      button.innerHTML = level + SUIT_HTMLS[suit];
+      button.innerHTML = level + STRAIN_HTMLS[suit];
       button.className = 'grey-btn transition-colors duration-200';
       if (hideInvalidBids) {
-        button.style.display = (bidValue <= lastBidValue ? 'none' : 'block');
+        button.style.display = (bidRank <= lastBidRank ? 'none' : 'block');
       } else {
-        button.disabled = (bidValue <= lastBidValue);
+        button.disabled = (bidRank <= lastBidRank);
       }
       button.onclick = () => handleBid(bidString);
       biddingGridEl.appendChild(button);
@@ -592,7 +614,7 @@ function mergeNumbers(x, y, allowDelta) {
 
 function renderRowOfPairs(line, count, allowDelta = false) {
   const items = line.split(/\s+/).slice(0, count);
-  let html = '<tr><td>' + ABBR_SUIT_HTMLS[items[0]] + '</td>';
+  let html = '<tr><td>' + STRAIN_HTMLS[items[0]] + '</td>';
   for (let i = 1; i < items.length; i += 2) {
     const new_items = mergeNumbers(items[i], items[i + 1], allowDelta);
     if (new_items.length == 1) {
@@ -690,7 +712,7 @@ function renderParContracts(contracts) {
 
   // Remove duplicates by keeping only one contract for each strain.
   const uniquePars = [];
-  for (const strain of ['N', 'S', 'H', 'D', 'C']) {
+  for (const strain of STRAINS) {
     uniquePars.push(...flatPars.filter(c => c.strain == strain).slice(0, 1));
   }
 
@@ -716,7 +738,7 @@ function computeParScore() {
   }
 
   const nsContracts = [], ewContracts = [];
-  for (const strain of ['N', 'S', 'H', 'D', 'C']) {
+  for (const strain of STRAINS) {
     nsContracts.push(...scanLevels(strain, ['N', 'S'], ddTricks));
     ewContracts.push(...scanLevels(strain, ['E', 'W'], ddTricks));
   }
@@ -757,7 +779,7 @@ function scanLevels(strain, declarers, ddTricks) {
 
 function competeWith(oppContract, ddTricks, seats, vulnerable) {
   const contracts = [];
-  for (const strain of ['N', 'S', 'H', 'D', 'C']) {
+  for (const strain of STRAINS) {
     const tricks = STRAIN_RANKS[strain] > STRAIN_RANKS[oppContract.strain] ?
       oppContract.tricks : oppContract.tricks + 1;
     if (tricks > 13) continue;
@@ -782,8 +804,6 @@ function competeWith(oppContract, ddTricks, seats, vulnerable) {
   }
   return contracts.sort((a, b) => b.score - a.score);
 }
-
-const STRAIN_RANKS = { 'N': 4, 'S': 3, 'H': 2, 'D': 1, 'C': 0 };
 
 class Contract {
   constructor(tricks, strain, actual_tricks, declarers, vulnerable) {
@@ -814,7 +834,7 @@ class Contract {
 
   renderContract() {
     const diffTricks = this.actual_tricks - this.tricks;
-    return '<tr><td>' + (this.tricks - 6) + ABBR_SUIT_HTMLS[this.strain] +
+    return '<tr><td>' + (this.tricks - 6) + STRAIN_HTMLS[this.strain] +
       (this.score < 0 ? 'X' : '') +
       (diffTricks == 0 ? '=' : this.#signed(diffTricks)) + ' ' +
       ' by ' + this.declarers.join('') + '</td></tr>';
@@ -894,8 +914,8 @@ function parseBoard(lines) {
 
 function parseHand(lines) {
   const hand = [];
-  for (const i in SUIT_SYMBOLS) {
-    const suit = SUIT_SYMBOLS[i];
+  for (const i in SUITS) {
+    const suit = SUITS[i];
     const line = lines[i];
     for (let pos = line.indexOf(suit) + 2; pos < line.length; pos++) {
       if (line[pos] === '-' || line[pos] === ' ') break;
@@ -907,8 +927,8 @@ function parseHand(lines) {
 
 // --- UTILITY FUNCTIONS ---
 function dealHands() {
-  let deck = [];
-  for (const suit of SUIT_SYMBOLS) {
+  const deck = [];
+  for (const suit of SUITS) {
     for (const rank of RANKS) {
       deck.push({ suit, rank });
     }
@@ -936,10 +956,9 @@ function dealHands() {
 }
 
 function sortHand(hand) {
-  const suitOrder = { '♠': 4, '♥': 3, '♦': 2, '♣': 1 };
   return hand.sort((a, b) => {
     if (a.suit !== b.suit) {
-      return suitOrder[b.suit] - suitOrder[a.suit];
+      return STRAIN_RANKS[b.suit] - STRAIN_RANKS[a.suit];
     }
     return RANK_VALUES[b.rank] - RANK_VALUES[a.rank];
   });
@@ -953,11 +972,10 @@ function calcRankHcp(rank) {
   return RANK_VALUES[rank] > 10 ? RANK_VALUES[rank] - 10 : 0;
 }
 
-function getBidValue(bidString) {
-  const level = parseInt(bidString[0], 10);
-  const suit = bidString.substring(1);
-  const suitValue = BID_SUITS.indexOf(suit);
-  return (level - 1) * 5 + suitValue;
+function getBidRank(bid) {
+  const level = Number(bid[0]);
+  const strainRank = STRAIN_RANKS[bid[1]];
+  return (level - 1) * 5 + strainRank;
 }
 
 function isRealBid(bid) {
