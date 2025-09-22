@@ -7,6 +7,9 @@ const BIDDER_SEATS = [ 'West', 'North', 'East', 'South' ];
 const SEAT_NUMBERS = { 'West': 0, 'North': 1, 'East': 2, 'South': 3 };
 const CALL_HTMLS = {'Pass': 'P', 'Dbl': 'X', 'Rdbl': 'XX', '': ''};
 const SUITS = ['S', 'H', 'D', 'C'];
+const SUIT_CONVERSIONS = {
+  'N': 'N', 'S': 'S', 'H': 'H', 'D': 'D', 'C': 'C',
+  'NT': 'N', '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
 const STRAINS = ['N', 'S', 'H', 'D', 'C'];
 const STRAIN_RANKS = { 'N': 4, 'S': 3, 'H': 2, 'D': 1, 'C': 0 };
 const STRAIN_HTMLS = { 'N': 'NT', 'S': '<ss></ss>', 'H': '<hs></hs>', 'D': '<ds></ds>', 'C': '<cs></cs>' };
@@ -106,18 +109,18 @@ class Board {
   }
 
   #convertHand(hand) {
-    return hand.map(c => ({suit: Board.SUIT_CONVERSIONS[c.suit], rank: c.rank}));
+    return hand.map(c => ({suit: SUIT_CONVERSIONS[c.suit], rank: c.rank}));
   }
 
   #convertAuction(auction) {
     return auction.map(b => '1234567'.includes(b[0]) ?
-                       b[0] + Board.SUIT_CONVERSIONS[b[1]] : b);
+                       b[0] + SUIT_CONVERSIONS[b[1]] : b);
   }
 
   #convertLeads(leads) {
     const newLeads = {};
     for (const card in leads) {
-      const newCard = Board.SUIT_CONVERSIONS[card[0]] + card.slice(1);
+      const newCard = SUIT_CONVERSIONS[card[0]] + card.slice(1);
       newLeads[newCard] = leads[card];
     }
     return newLeads;
@@ -152,9 +155,6 @@ class Board {
   }
 
   static SUIT_NUMBERS = { 'N': 4, 'S': 0, 'H': 1, 'D': 2, 'C': 3 };
-  static SUIT_CONVERSIONS = {
-    'N': 'N', 'S': 'S', 'H': 'H', 'D': 'D', 'C': 'C',
-    'NT': 'N', '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
 };
 
 function isVulnerable(seat, vulnerable) {

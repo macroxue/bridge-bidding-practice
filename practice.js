@@ -561,13 +561,15 @@ function parseBoard(lines) {
 }
 
 function parseHand(lines) {
+  const SUIT_SYMBOLS = '♠♥♦♣';
   const hand = [];
-  for (const i in SUITS) {
-    const suit = SUITS[i];
+  for (const i in SUIT_SYMBOLS) {
+    const suit = SUIT_SYMBOLS[i];
     const line = lines[i];
     for (let pos = line.indexOf(suit) + 2; pos < line.length; pos++) {
       if (line[pos] === '-' || line[pos] === ' ') break;
-      hand.push({suit, rank: line[pos] === 'T' ? '10' : line[pos]});
+      hand.push({suit: SUIT_CONVERSIONS[suit],
+                 rank: line[pos] === 'T' ? '10' : line[pos]});
     }
   }
   return hand;
