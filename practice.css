@@ -1,39 +1,115 @@
-@font-face { font-family: DejaVu; src: url('DejaVu.ttf'); }
-body { font-family: DejaVu; font-weight: bold; }
+@font-face {
+  font-family: DejaVu;
+  src: url('DejaVu.ttf');
+}
+body {
+  background-color: lightgrey;
+  display: flex;
+  font-family: DejaVu;
+  font-weight: bold;
+  justify-content: center;
+}
 table { white-space: nowrap; }
 
 /* Bridge board */
-#contract, #par-score { display: flex; align-items: center; justify-content: center; }
+#board {
+  background-color: white;
+  border-radius: 20px;
+  width: min(576px, 100vw - 20px);
+  padding: 10px;
+}
+#banner {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding-bottom: 10px;
+}
+#logo { width: min(60px, 10vw); }
+#board-num { font-size: 120%; }
+#table {
+  border-top: solid lightgrey 1px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding-top: 10px;
+}
+#contract, #par-score {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
 .seat { white-space: nowrap; }
-.hand { background-color: #eee; border: 1px solid lightgrey; }
-.bids { font-weight: normal; text-align: center; }
-.bid:hover { background-color: #fee; cursor: url('cross.png'), auto; }
-#auction { border: 1px solid lightgrey; height: 132px; overflow: auto; }
-#note { border: 1px solid #eed; background-color: #ffe; padding: 3px; }
-#bidding-controls { overflow: auto; }
+.hand {
+  background-color: #eee;
+  border-collapse: collapse;
+}
+.bids {
+  font-weight: normal;
+  text-align: center;
+}
+.bid:hover {
+  background-color: #fee;
+  cursor: url('cross.png'), auto;
+}
+#auction {
+  align-content: flex-start;
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  height: 120px;
+  overflow: auto;
+}
+#note {
+  border: 1px solid lightgrey;
+  background-color: #ffe;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  padding: 5px;
+}
+#bidding-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 10px;
+  overflow: auto;
+  text-align: center;
+}
+.col-span-full { grid-column: 1 / -1; }
 
 /* Overlay tricks to the center-bottom of the card */
-.suit td { position: relative; }
+.suit td {
+  padding-left: 0;
+  padding-right: 0;
+  position: relative;
+}
 .tricks {
-  position: absolute;
-  bottom: 0px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: -9px;
   font-size: 75%;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
 }
 .equal { color: green; }
 .plus { color: green; letter-spacing: -2px; }
 .minus { color: red; letter-spacing: -1px; }
 
 /* Buttons */
-button { border-radius: 24px; color: white; height: 48px; }
+button {
+  border-radius: 24px;
+  border-width: 0;
+  font-family: DejaVu;
+  font-size: 105%;
+  height: 48px;
+  transition: background-color .2s;
+}
 .nav-btn { width: 100px; }
 
 .red-btn { background-color: #a00; color: white; }
 .red-btn:hover { background-color: #d00; }
 .green-btn { background-color: #080; color: white; }
 .green-btn:hover { background-color: #0c0; }
-.blue-btn { background-color: #008; color: white; }
+.blue-btn { background-color: #007; color: white; }
 .blue-btn:hover { background-color: #00f; }
 .grey-btn { background-color: #eee; color: black; }
 .grey-btn:hover { background-color: #ccc; }
@@ -45,8 +121,17 @@ button { border-radius: 24px; color: white; height: 48px; }
 }
 
 /* Toggles */
-.toggle { position: relative; display: inline-block; width: 60px; height: 30px; }
-.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: clamp(40px, 10vw, 60px);
+  height: 30px;
+}
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
 .slider {
   position: absolute;
   cursor: pointer;
@@ -72,15 +157,26 @@ button { border-radius: 24px; color: white; height: 48px; }
   transition: .1s;
   border-radius: 50%;
 }
-.slider:hover { background-color: #ddd; transition: 0.2s;}
-input:checked + .slider { background-color: #38c; color: white; }
-input:checked + .slider:before { transform: translateX(30px); }
-input:checked + .slider:hover { background-color: #5ae; transition: 0.2s;}
+.slider:hover {
+  background-color: #ddd;
+  transition: .2s;
+}
+input:checked + .slider {
+  background-color: #38c;
+  color: white;
+}
+input:checked + .slider:before {
+  transform: translateX(calc(clamp(40px, 10vw, 60px) - 30px));
+}
+input:checked + .slider:hover {
+  background-color: #5ae;
+  transition: .2s;
+}
 
 /* Vulnerability */
 .red-name {
   background-color: #a00;
-  border: 1px solid #800;
+  border: 1px solid #a00;
   color:white;
   text-align: center;
 }
@@ -92,18 +188,21 @@ input:checked + .slider:hover { background-color: #5ae; transition: 0.2s;}
 }
 
 /* Suit symbols */
-ss:before { color: black; content: '♠'; }
-hs:before { color: #dd0000; content: '♥'; }
-ds:before { color: #dd0000; content: '♦'; }
-cs:before { color: black; content: '♣'; }
+ss:before { color: #000; content: '♠'; }
+hs:before { color: #c00; content: '♥'; }
+ds:before { color: #c00; content: '♦'; }
+cs:before { color: #000; content: '♣'; }
 
 /* Double dummy */
 table.dd {
-  border: 1px solid lightgrey;
+  border-collapse: collapse;
   font-size: 90%;
   line-height: 136%;
   margin:auto;
   text-align: center;
 }
-table.dd th { background-color: #eee; }
-table.dd th, table.dd td { min-width: 30px; padding-left: 3px; padding-right: 3px; }
+table.dd th, table.dd td {
+  min-width: 30px;
+  padding-left: 3px;
+  padding-right: 3px;
+}

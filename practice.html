@@ -4,16 +4,17 @@
     <meta charset='UTF-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <title>Bridge Bidding Practice</title>
-    <script src='https://cdn.tailwindcss.com'></script>
     <link rel='stylesheet' href='practice.css'></link>
-    <link rel="icon" href='steps.png'>
+    <link rel='icon' href='steps.png'>
   </head>
-  <body class='bg-gray-100 flex justify-center'>
-    <div id='board' class='w-full max-w-4xl bg-white p-3 md:p-4'>
-      <div class='flex justify-between items-center mb-3 border-b pb-3 gap-3'>
-        <a href='https://github.com/macroxue/bridge-bidding-practice'><img src='steps.png' width='64px'/></a>
-        <button id='first' class='nav-btn blue-btn transition-colors duration-200'>First</button>
-        <button id='last' class='nav-btn blue-btn transition-colors duration-200'>Last</button>
+  <body>
+    <div id='board'>
+      <div id='banner'>
+        <a href='https://github.com/macroxue/bridge-bidding-practice'>
+          <img id='logo' src='steps.png'/>
+        </a>
+        <button id='first' class='nav-btn blue-btn'>First</button>
+        <button id='last' class='nav-btn blue-btn'>Last</button>
         <table><tr><td>
               <label class='toggle'>
                 <input id='noted' type="checkbox">
@@ -26,12 +27,12 @@
                 </label>
               </td></tr>
         </table>
-        <button id='prev' class='nav-btn green-btn transition-colors duration-200'>Prev</button>
-        <div id='board-num' class='text-2xl' contenteditable='true'></div>
-        <button id='next' class='nav-btn green-btn transition-colors duration-200'>Next</button>
+        <button id='prev' class='nav-btn green-btn'>Prev</button>
+        <div id='board-num' contenteditable='true'></div>
+        <button id='next' class='nav-btn green-btn'>Next</button>
       </div>
 
-      <div id='table' class='grid grid-cols-3 gap-2 md:gap-3'>
+      <div id='table'>
         <!-- Row -->
         <div id='contract'></div>
         <div><div id='north-hand' class='hand'></div></div>
@@ -39,7 +40,7 @@
 
         <!-- Row -->
         <div><div id='west-hand' class='hand'></div></div>
-        <div id='auction' class='grid grid-cols-4 gap-0 content-start'>
+        <div id='auction'>
           <div id='west-name' class='white-name'>W</div>
           <div id='north-name' class='white-name'>N</div>
           <div id='east-name' class='white-name'>E</div>
@@ -57,13 +58,11 @@
         <div id='dd-results'></div>
 
       </div>
-      <div id='note' class='col-span-full mt-3' contenteditable='true'></div>
+      <div id='note' contenteditable='true'></div>
 
       <!-- Bidding Controls -->
-      <div id='bidding-controls' class='mt-3'>
-        <div id='bidding-grid' class='grid grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-3'>
-          <!-- Bidding buttons will be injected here -->
-        </div>
+      <div id='bidding-grid'>
+        <!-- Bidding buttons will be injected here -->
       </div>
     </div>
     <script src='board.js'></script>

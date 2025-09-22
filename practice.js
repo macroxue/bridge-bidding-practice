@@ -315,9 +315,9 @@ function renderContract() {
 }
 
 function renderTricks(tricks) {
-  if (tricks == 0) return '<sub class="tricks equal">=</sub>';
-  if (tricks >= 1) return '<sub class="tricks plus">+' + tricks + '</sub>';
-  if (tricks <= -1) return '<sub class="tricks minus">&ndash;' + -tricks + '</sub>';
+  if (tricks == 0) return '<span class="tricks equal">=</span>';
+  if (tricks >= 1) return '<span class="tricks plus">+' + tricks + '</span>';
+  if (tricks <= -1) return '<span class="tricks minus">&ndash;' + -tricks + '</span>';
 }
 
 function renderCard(suit, rank, tricks) {
@@ -375,14 +375,14 @@ function renderBiddingControls() {
 
   const passBtn = document.createElement('button');
   passBtn.textContent = 'Pass';
-  passBtn.className = 'green-btn transition-colors duration-200';
+  passBtn.className = 'green-btn';
   passBtn.onclick = () => handleBid('Pass');
   biddingGridEl.appendChild(passBtn);
 
   if (!pairPractice) {
     const dblBtn = document.createElement('button');
     dblBtn.textContent = 'X';
-    dblBtn.className = 'red-btn transition-colors duration-200';
+    dblBtn.className = 'red-btn';
     dblBtn.onclick = () => handleBid('Dbl');
     biddingGridEl.appendChild(dblBtn);
     const canDbl =
@@ -394,7 +394,7 @@ function renderBiddingControls() {
 
     const rdblBtn = document.createElement('button');
     rdblBtn.textContent = 'XX';
-    rdblBtn.className = 'blue-btn transition-colors duration-200';
+    rdblBtn.className = 'blue-btn';
     rdblBtn.onclick = () => handleBid('Rdbl');
     biddingGridEl.appendChild(rdblBtn);
     const canRdbl =
@@ -414,7 +414,7 @@ function renderBiddingControls() {
       const bidRank = getBidRank(bidString);
       const button = document.createElement('button');
       button.innerHTML = level + STRAIN_HTMLS[suit];
-      button.className = 'grey-btn transition-colors duration-200';
+      button.className = 'grey-btn';
       if (hideInvalidBids) {
         button.style.display = (bidRank <= lastBidRank ? 'none' : 'block');
       } else {
@@ -486,7 +486,7 @@ function renderDoubleDummyResults() {
 function renderSingleDummyResults() {
   const board = boards[currentBoard];
   if (board.dd == null || board.dd.slice(6, 17).length == 0) {
-    biddingGridEl.innerHTML = '<p class="col-span-full text-center text-gray-500">Auction has ended.</p>';
+    biddingGridEl.innerHTML = '<p class="col-span-full">Auction has ended.</p>';
     return;
   }
 
@@ -503,6 +503,7 @@ function renderSingleDummyResults() {
     html += renderRowOfPairs(line, 17, /*allowDelta*/true);
   }
   html += `</tr>
+  <tr><td>&nbsp;</td></tr>
   <tr>
     <th></th>
     <th><abbr title="Average tricks by West or East">W-E</abbr></th>`;
