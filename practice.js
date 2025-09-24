@@ -257,7 +257,7 @@ function takeTurn() {
   renderBiddingControls();
 
   if (pairPractice && ['North', 'South'].includes(board.player)) {
-    handleBid('Pass');
+    handleBid('P');
   }
 }
 
@@ -265,7 +265,7 @@ function showBid(player, bid, index) {
   const bidContainer = document.createElement('div');
   bidContainer.className = 'bid';
   bidContainer.innerHTML = '1234567'.includes(bid[0]) ?
-    bid[0] + STRAIN_HTMLS[bid[1]] : CALL_HTMLS[bid];
+    bid[0] + STRAIN_HTMLS[bid[1]] : bid;
   bidContainer.onclick = () => {
     boards[currentBoard].retractBid(index);
     boards[currentBoard].save();
@@ -311,7 +311,7 @@ function renderContract() {
   const {level, trump, doubled, declarer} = board.getContract();
   contractEl.innerHTML =
     level == 0 ? 'Passed out' : level + STRAIN_HTMLS[trump] +
-    CALL_HTMLS[doubled] + '&nbsp;by ' + declarer;
+    doubled + '&nbsp;by ' + declarer;
 }
 
 function renderTricks(tricks) {
@@ -374,34 +374,34 @@ function renderBiddingControls() {
   biddingGridEl.innerHTML = '';
 
   const passBtn = document.createElement('button');
-  passBtn.textContent = 'Pass';
+  passBtn.textContent = 'P';
   passBtn.className = 'green-btn';
-  passBtn.onclick = () => handleBid('Pass');
+  passBtn.onclick = () => handleBid('P');
   biddingGridEl.appendChild(passBtn);
 
   if (!pairPractice) {
     const dblBtn = document.createElement('button');
     dblBtn.textContent = 'X';
     dblBtn.className = 'red-btn';
-    dblBtn.onclick = () => handleBid('Dbl');
+    dblBtn.onclick = () => handleBid('X');
     biddingGridEl.appendChild(dblBtn);
     const canDbl =
       (auction.length >= 1 && isRealBid(auction[auction.length - 1])) ||
-      (auction.length >= 3 && auction[auction.length - 1] === 'Pass' &&
-        auction[auction.length - 2] === 'Pass' &&
+      (auction.length >= 3 && auction[auction.length - 1] === 'P' &&
+        auction[auction.length - 2] === 'P' &&
         isRealBid(auction[auction.length - 3]));
     dblBtn.disabled = !canDbl;
 
     const rdblBtn = document.createElement('button');
     rdblBtn.textContent = 'XX';
     rdblBtn.className = 'blue-btn';
-    rdblBtn.onclick = () => handleBid('Rdbl');
+    rdblBtn.onclick = () => handleBid('XX');
     biddingGridEl.appendChild(rdblBtn);
     const canRdbl =
-      (auction.length >= 1 && auction[auction.length - 1] === 'Dbl') ||
-      (auction.length >= 3 && auction[auction.length - 1] === 'Pass' &&
-        auction[auction.length - 2] === 'Pass' &&
-        auction[auction.length - 3] === 'Dbl');
+      (auction.length >= 1 && auction[auction.length - 1] === 'X') ||
+      (auction.length >= 3 && auction[auction.length - 1] === 'P' &&
+        auction[auction.length - 2] === 'P' &&
+        auction[auction.length - 3] === 'X');
     rdblBtn.disabled = !canRdbl;
   }
 
@@ -630,7 +630,7 @@ function getBidRank(bid) {
 }
 
 function isRealBid(bid) {
-  return ['Pass', 'Dbl', 'Rdbl'].includes(bid) ? false : true;
+  return ['P', 'X', 'XX'].includes(bid) ? false : true;
 }
 
 function nextPlayer(player) {

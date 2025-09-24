@@ -5,7 +5,9 @@ const DEALER_SEATS = [ 'North', 'East', 'South', 'West' ];
 const VULNERABLES = [ 'None', 'N-S', 'E-W', 'All' ];
 const BIDDER_SEATS = [ 'West', 'North', 'East', 'South' ];
 const SEAT_NUMBERS = { 'West': 0, 'North': 1, 'East': 2, 'South': 3 };
-const CALL_HTMLS = {'Pass': 'P', 'Dbl': 'X', 'Rdbl': 'XX', '': ''};
+const CALL_CONVERSIONS = {
+  'P': 'P', 'X': 'X', 'XX': 'XX',
+  'Pass': 'P', 'Dbl': 'X', 'Rdbl': 'XX', '': ''};
 const SUITS = ['S', 'H', 'D', 'C'];
 const SUIT_CONVERSIONS = {
   'N': 'N', 'S': 'S', 'H': 'H', 'D': 'D', 'C': 'C',
@@ -51,8 +53,8 @@ class Board {
 
   isAuctionOver() {
     const len = this.auction.length;
-    return len >= 4 && this.auction[len - 1] === 'Pass' &&
-      this.auction[len - 2] === 'Pass' && this.auction[len - 3] === 'Pass';
+    return len >= 4 && this.auction[len - 1] === 'P' &&
+      this.auction[len - 2] === 'P' && this.auction[len - 3] === 'P';
   }
 
   getContract() {
@@ -66,7 +68,7 @@ class Board {
     const level = Number(contract.slice(0, 1));
     const trump = contract.slice(1);
     const doubled = [...this.auction.slice(pos + 1)].reverse()
-      .find(bid => ['Dbl', 'Rdbl'].includes(bid)) ?? '';
+      .find(bid => ['X', 'XX'].includes(bid)) ?? '';
 
     // Identify the declarer at the same side who first bid the trump suit.
     const first = this.auction.findIndex((bid, i) => i % 2 == pos % 2 &&
@@ -114,7 +116,7 @@ class Board {
 
   #convertAuction(auction) {
     return auction.map(b => '1234567'.includes(b[0]) ?
-                       b[0] + SUIT_CONVERSIONS[b[1]] : b);
+                       b[0] + SUIT_CONVERSIONS[b[1]] : CALL_CONVERSIONS[b]);
   }
 
   #convertLeads(leads) {
