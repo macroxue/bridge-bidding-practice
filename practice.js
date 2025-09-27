@@ -1,6 +1,6 @@
 const pairPractice = (new URLSearchParams(window.location.search)).has('p');
 const clearStorage = (new URLSearchParams(window.location.search)).has('c');
-const doubleDummy = (new URLSearchParams(window.location.search)).has('d');
+const doubleDummy = (new URLSearchParams(window.location.search)).get('d');
 const hideInvalidBids = !(new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
@@ -538,7 +538,8 @@ function renderParScore() {
 
 // --- DOUBLE-DUMMY DATA ---
 function fetchDoubleDummy() {
-  const url = 'https://raw.githubusercontent.com/macroxue/double-dummy/main/dd.000';
+  const url = 'https://raw.githubusercontent.com/macroxue/double-dummy/main/dd.' +
+    doubleDummy;
   fetch(url).then(r => r.text()).then(text => {
     const lines = text.split('\n');
     for (let num = 0; num < MAX_BOARDS; num++) {
