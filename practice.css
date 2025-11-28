@@ -9,6 +9,20 @@ body {
   font-weight: bold;
   justify-content: center;
 }
+
+
+/* Hide scrollbar but allow scrolling */
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+body {
+  -ms-overflow-style: none; /* IE and Edge */
+}
+html {
+  scrollbar-width: none; /* Firefox */
+}
+
+/* No multi-line text in a table cell */
 table { white-space: nowrap; }
 
 /* Bridge board */
