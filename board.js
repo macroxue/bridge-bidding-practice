@@ -77,6 +77,14 @@ class Board {
     return {level, trump, doubled, declarer};
   }
 
+  getSuit(seat, suit) {
+    let ranks = '';
+    this.hands[seat].forEach(card => {
+      if (card.suit == suit) ranks += card.rank == '10' ? 'T' : card.rank;
+    });
+    return (suit + ' ' + ranks).padEnd(10);
+  }
+
   load() {
     let saved = localStorage.getItem(STORAGE_KEY_PREFIX + this.num);
     if (saved == null) return false;

@@ -1,6 +1,7 @@
 const pairPractice = (new URLSearchParams(window.location.search)).has('p');
 const clearStorage = (new URLSearchParams(window.location.search)).has('c');
 const doubleDummy = (new URLSearchParams(window.location.search)).get('d');
+const exportMarkdown = (new URLSearchParams(window.location.search)).has('m');
 const hideInvalidBids = !(new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
@@ -37,6 +38,7 @@ const biddingGridEl = document.getElementById('bidding-grid');
 const contractEl = document.getElementById('contract');
 const parScoreEl = document.getElementById('par-score');
 const ddResultsEl = document.getElementById('dd-results');
+const markdownEl = document.getElementById('markdown');
 
 // --- DOUBLE DUMMY SOLVER ---
 const worker = new Worker('worker.js');
@@ -303,6 +305,7 @@ function endAuction() {
   renderParScore();
   renderDoubleDummyResults();
   renderSingleDummyResults();
+  if (exportMarkdown) renderMarkdown();
 }
 
 // --- RENDERING FUNCTIONS ---
@@ -516,6 +519,54 @@ function renderSingleDummyResults() {
     html += renderRowOfPairs(line, 17, /*allowDelta*/true);
   }
   biddingGridEl.innerHTML = html + '</table>';
+}
+
+// --- Markdown ---
+const CHINESE_VULNERABLE = { 'None': '双方无局', 'N-S': '南北有局', 'E-W': '东西有局', 'All': '双方有局' };
+const CHINESE_DEALER = { 'West': '西', 'North': '北', 'East': '东', 'South': '南' };
+
+function renderMarkdown() {
+  const board = boards[currentBoard];
+  const sep = ' | ', space = ''.padEnd(10), nl = '\n';
+  const vulnerable = CHINESE_VULNERABLE[board.vulnerable].padEnd(6);
+  const dealer = (CHINESE_DEALER[board.dealer] + '发牌').padEnd(7);
+
+  // Hands
+  let text = vulnerable + sep + board.getSuit('North', 'S') + sep + nl;
+  text += dealer + sep + board.getSuit('North', 'H') + sep + nl;
+  text += space + sep + board.getSuit('North', 'D') + sep + nl;
+  text += space + sep + board.getSuit('North', 'C') + sep + nl;
+  text += board.getSuit('West', 'S') + sep + space + sep + board.getSuit('East', 'S') + nl;
+  text += board.getSuit('West', 'H') + sep + space + sep + board.getSuit('East', 'H') + nl;
+  text += board.getSuit('West', 'D') + sep + space + sep + board.getSuit('East', 'D') + nl;
+  text += board.getSuit('West', 'C') + sep + space + sep + board.getSuit('East', 'C') + nl;
+  text += space + sep + board.getSuit('South', 'S') + sep + nl;
+  text += space + sep + board.getSuit('South', 'H') + sep + nl;
+  text += space + sep + board.getSuit('South', 'D') + sep + nl;
+  text += space + sep + board.getSuit('South', 'C') + sep + nl;
+
+  // Auction
+  text += Object.values(CHINESE_DEALER).join(sep) + nl;
+  for (let seat of BIDDER_SEATS) {
+    if (seat !== board.dealer) text += ''.padEnd(2) + sep;
+    else break;
+  }
+  let seat = board.dealer;
+  board.auction.forEach((bid, index) => {
+    text += bid.padEnd(2);
+    seat = nextPlayer(seat);
+    if (seat !== 'West') text += sep;
+    else text += ' \n';
+
+  });
+  if (seat !== 'West')
+    text += '\n';
+
+  // Replace strains
+  text = text.replace(/N /g, 'NT')
+    .replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣');
+
+  markdownEl.innerHTML = '<pre>' + text + '</pre>';
 }
 
 // --- PAR SCORE ---
