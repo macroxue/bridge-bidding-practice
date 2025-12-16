@@ -222,6 +222,7 @@ function showBoard() {
   contractEl.innerHTML = '';
   parScoreEl.innerHTML = '';
   ddResultsEl.innerHTML = '';
+  markdownEl.innerHTML = '';
 
   // Auction
   for (seat of BIDDER_SEATS) {
