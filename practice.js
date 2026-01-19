@@ -10,6 +10,7 @@ const filterChk = document.getElementById('filter');
 const filterBar = document.getElementById('filter-bar');
 const notedChk = document.getElementById('noted');
 const endedChk = document.getElementById('ended');
+const regexChk = document.getElementById('regex');
 const matchEl = document.getElementById('match');
 const matchCountEl = document.getElementById('match-count');
 
@@ -95,38 +96,31 @@ function initialize() {
   filterChk.checked = false;
   notedChk.checked = false;
   endedChk.checked = false;
+  regexChk.checked = true;
   filterChk.addEventListener('change', toggleFilterBar);
   notedChk.addEventListener('change', countMatches);
   endedChk.addEventListener('change', countMatches);
+  regexChk.addEventListener('change', () => {
+    matchEl.disabled = !regexChk.checked;
+    countMatches();
+  });
   matchEl.addEventListener('change', countMatches);
 
   firstBtn.addEventListener('click', firstBoard);
   lastBtn.addEventListener('click', lastBoard);
   prevBtn.addEventListener('click', prevBoard);
   nextBtn.addEventListener('click', nextBoard);
-  boardNumEl.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      boardNumEl.blur();
-    }
-  });
-  boardNumEl.addEventListener('blur', () => {
-    const num = Number(boardNumEl.innerHTML);
+  boardNumEl.addEventListener('change', () => {
+    const num = Number(boardNumEl.value);
     if (1 <= num && num <= boards.length) {
       currentBoard = num - 1;
       showBoard();
     } else {
-      boardNumEl.innerHTML = currentBoard + 1;
+      boardNumEl.value = currentBoard + 1;
     }
   });
-  noteEl.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      noteEl.blur();
-    }
-  });
-  noteEl.addEventListener('blur', () => {
-    boards[currentBoard].note = noteEl.innerHTML;
+  noteEl.addEventListener('change', () => {
+    boards[currentBoard].note = noteEl.value;
     boards[currentBoard].save();
   });
 
@@ -193,21 +187,22 @@ function nextBoard() {
 
 function isFilterOn() {
   return filterChk.checked &&
-    (notedChk.checked || endedChk.checked || matchEl.value.length > 0);
+    (notedChk.checked || endedChk.checked ||
+      (regexChk.checked && matchEl.value.length > 0));
 }
 
 function isBoardInScope(board) {
   if (!filterChk.checked) return true;
-  return (!notedChk.checked || board.note !== '') &&
+  return (!notedChk.checked || board.note.trim() !== '') &&
     (!endedChk.checked || board.isAuctionOver()) &&
-    (matchEl.value.length == 0 ||
+    (!regexChk.checked || matchEl.value.length == 0 ||
       board.getAuctionStr().match(matchEl.value.toUpperCase()));
 }
 
 function countMatches() {
   if (!filterChk.checked) return;
   const count = boards.filter(board => isBoardInScope(board)).length;
-  matchCountEl.innerHTML = count + ' matches';
+  matchCountEl.innerHTML = count + (count == 1 ? ' match' : ' matches');
 }
 
 function backwardSearchBoard(start) {
@@ -238,14 +233,14 @@ function showBoard() {
   nextBtn.disabled = board.num == MAX_BOARDS - 1;
 
   // Info
-  boardNumEl.innerHTML = board.num + 1;
+  boardNumEl.value = board.num + 1;
 
   // Hands
   tableEl.style.minHeight = pairPractice ? '144px' : '288px';
   for (seat of BIDDER_SEATS) {
     renderHand(seat);
   }
-  noteEl.innerHTML = board.note;
+  noteEl.value = board.note;
   contractEl.innerHTML = '';
   parScoreEl.innerHTML = '';
   ddResultsEl.innerHTML = '';

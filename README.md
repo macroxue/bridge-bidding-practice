@@ -20,8 +20,8 @@ One player bids all four hands, practicing and tuning any systems.
 When the auction of a board ends, all four hands are displayed with detailed analysis
 to help the player evaluate the auction. The analysis assumes perfect bidding and
 card play.
-* Par score and par contract(s) assuming perfect bidding by all seats.
-* Double-dummy (DD) results assuming perfect card play by all seats.
+* Par score and par contract(s) assume perfect bidding by all seats.
+* Double-dummy (DD) results assume perfect card play by all seats.
 
 Three kinds of DD analysis are performed.
 * For opening leads of this contract, shown as green numbers under the leading
@@ -33,27 +33,24 @@ Three kinds of DD analysis are performed.
   the declarer of an NT contract takes 9 tricks but North can take only 5 tricks;
   either South or North take 11 tricks when declaring a spade contract.
   Therefore, the best strain to play in is spade rather than NT.
-* Average results when defenders' cards are randomized, shown at the bottom of
+* For average results when defenders' cards are shuffled, shown at the bottom of
   the page. Since it's very expensive to compute such results, they're
   precomputed and retrieved from this
   [double-dummy dataset](https://github.com/macroxue/double-dummy).
   For example, either South or North can take 10 tricks with spade trumps 46%
   of the time, while 3NT can make only 17% of the time. This result, although
   without considering the actual auction, still shows spade is a better
-  strain than NT. From the numbers one can also see that it's better for South
-  to declare than North.
+  strain than NT. From the numbers, one can also see that it's better for South
+  to declare than North. This board is above average for South and North, e.g.
+  they take 9.3 tricks on average with spade trumps but 11 tricks with this board.
 
 ## Filtering
 
 When filtering is toggled on, filters below are applied to the boards.
 * Noted: auctions with a manually entered note.
 * Ended: auctions that have ended.
-* Auction: auctions that match a regular expression.
-
-Auctions and boards can be filtered by patterns using JavaScript's regular
-expressions. Refer to
-[JAVASCRIPT.INFO](https://javascript.info/regular-expressions)
-for technical details.
+* Regex: auctions that match a
+  [regular expression](https://javascript.info/regular-expressions).
 
 The vocabulary of auctions is limited to 38 calls.
 * 35 bids: "[1-7][NSHDC]"

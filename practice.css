@@ -9,7 +9,10 @@ body {
   font-weight: bold;
   justify-content: center;
 }
-
+input {
+  font-family: DejaVu;
+  font-weight: bold;
+}
 
 /* Hide scrollbar but allow scrolling */
 body::-webkit-scrollbar {
@@ -45,8 +48,15 @@ table { white-space: nowrap; }
   background-color: #ffe;
   padding: 5px;
 }
+#match:disabled { background-color: #bbb; }
+#match-count { width: 120px; }
 #logo { width: min(32px, 10vw); }
-#board-num { font-size: 120%; }
+#board-num {
+  border: 0px;
+  font-size: 105%;
+  text-align: center;
+  width: 45px;
+}
 #table {
   border-top: solid lightgrey 1px;
   display: grid;
@@ -86,6 +96,7 @@ table { white-space: nowrap; }
   margin-bottom: 10px;
   margin-top: 10px;
   padding: 5px;
+  width: calc(100% - 12px);
 }
 #bidding-grid {
   display: grid;

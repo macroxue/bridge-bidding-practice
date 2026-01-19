@@ -15,25 +15,37 @@
         </a>
         <button id='first' class='nav-btn blue-btn'>First</button>
         <button id='last' class='nav-btn blue-btn'>Last</button>
-        <label class='toggle'>
-          <input id='filter' type="checkbox">
-          <span class='slider'>Filter</span>
-        </label>
+        <div>
+          <label class='toggle'>
+            <input id='filter' type="checkbox">
+            <span class='slider'>Filter</span>
+          </label>
+        </div>
         <button id='prev' class='nav-btn green-btn'>Prev</button>
-        <div id='board-num' contenteditable='true'></div>
+        <input id='board-num' type='text'>
         <button id='next' class='nav-btn green-btn'>Next</button>
       </div>
 
       <div id='filter-bar'>
-        <label class='toggle'>
-          <input id='noted' type="checkbox">
-          <span class='slider'>Noted</span>
-        </label>
-        <label class='toggle'>
-          <input id='ended' type="checkbox">
-          <span class='slider'>Ended</span>
-        </label>
-        <label>Auction: <input id='match' type='text'></label>
+        <div>
+          <label class='toggle'>
+            <input id='noted' type="checkbox">
+            <span class='slider'>Noted</span>
+          </label>
+        </div>
+        <div>
+          <label class='toggle'>
+            <input id='ended' type="checkbox">
+            <span class='slider'>Ended</span>
+          </label>
+        </div>
+        <div>
+          <label class='toggle'>
+            <input id='regex' type='checkbox'>
+            <span class='slider'>Regex</span>
+          </label>
+        </div>
+        <input id='match' type='text'>
         <div id='match-count'></div>
       </div>
 
@@ -63,7 +75,7 @@
         <div id='dd-results'></div>
 
       </div>
-      <div id='note' contenteditable='true'></div>
+      <input id='note' type='text'>
 
       <!-- Bidding Controls -->
       <div id='bidding-grid'>
