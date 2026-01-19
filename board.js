@@ -57,6 +57,10 @@ class Board {
       this.auction[len - 2] === 'P' && this.auction[len - 3] === 'P';
   }
 
+  getAuctionStr() {
+    return this.auction.map(call => (call === 'XX' ? 'R' : call)).join('');
+  }
+
   getContract() {
     if (!this.isAuctionOver()) return {level: 0};
 

@@ -6,8 +6,13 @@ const hideInvalidBids = !(new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
 // --- DOM ELEMENTS ---
+const filterChk = document.getElementById('filter');
+const filterBar = document.getElementById('filter-bar');
 const notedChk = document.getElementById('noted');
 const endedChk = document.getElementById('ended');
+const matchEl = document.getElementById('match');
+const matchCountEl = document.getElementById('match-count');
+
 const firstBtn = document.getElementById('first');
 const lastBtn = document.getElementById('last')
 const prevBtn = document.getElementById('prev');
@@ -87,8 +92,14 @@ let currentBoard = -1;
 let boards = [];
 
 function initialize() {
+  filterChk.checked = false;
   notedChk.checked = false;
   endedChk.checked = false;
+  filterChk.addEventListener('change', toggleFilterBar);
+  notedChk.addEventListener('change', countMatches);
+  endedChk.addEventListener('change', countMatches);
+  matchEl.addEventListener('change', countMatches);
+
   firstBtn.addEventListener('click', firstBoard);
   lastBtn.addEventListener('click', lastBoard);
   prevBtn.addEventListener('click', prevBoard);
@@ -120,12 +131,9 @@ function initialize() {
   });
 
   if (clearStorage) localStorage.clear();
-  if (doubleDummy) {
-    fetchDoubleDummy();
-  } else {
-    loadBoards();
-    pickStartingBoard();
-  }
+  loadBoards();
+  if (boards.length == 0) fetchDoubleDummy();
+  pickStartingBoard();
 }
 
 function loadBoards() {
@@ -159,12 +167,19 @@ function pickStartingBoard() {
   showBoard();
 }
 
+function toggleFilterBar() {
+  filterBar.style.display = (filterChk.checked ? 'flex' : 'none');
+  countMatches();
+}
+
 function firstBoard() { forwardSearchBoard(0); }
 function lastBoard() { backwardSearchBoard(boards.length - 1); }
 function prevBoard() { backwardSearchBoard(currentBoard - 1); }
 
 function nextBoard() {
-  if (!notedChk.checked && !endedChk.checked) {
+  if (isFilterOn()) {
+    forwardSearchBoard(currentBoard + 1);
+  } else {
     if (currentBoard == boards.length - 1) {
       const board = new Board(boards.length);
       board.solve();
@@ -173,14 +188,26 @@ function nextBoard() {
     }
     currentBoard++;
     showBoard();
-  } else {
-    forwardSearchBoard(currentBoard + 1);
   }
 }
 
+function isFilterOn() {
+  return filterChk.checked &&
+    (notedChk.checked || endedChk.checked || matchEl.value.length > 0);
+}
+
 function isBoardInScope(board) {
+  if (!filterChk.checked) return true;
   return (!notedChk.checked || board.note !== '') &&
-    (!endedChk.checked || board.isAuctionOver());
+    (!endedChk.checked || board.isAuctionOver()) &&
+    (matchEl.value.length == 0 ||
+      board.getAuctionStr().match(matchEl.value.toUpperCase()));
+}
+
+function countMatches() {
+  if (!filterChk.checked) return;
+  const count = boards.filter(board => isBoardInScope(board)).length;
+  matchCountEl.innerHTML = count + ' matches';
 }
 
 function backwardSearchBoard(start) {
@@ -273,6 +300,7 @@ function showBid(player, bid, index) {
     boards[currentBoard].retractBid(index);
     boards[currentBoard].save();
     showBoard();
+    countMatches();
   };
   bidsEls[player].appendChild(bidContainer);
   // Scroll to bottom to show the latest bid.
@@ -284,6 +312,7 @@ function handleBid(bid) {
   showBid(board.player, bid, board.auction.length);
   board.addBid(bid);
   board.save();
+  countMatches();
   if (board.isAuctionOver()) {
     board.solveLeads();
     endAuction();
@@ -590,8 +619,11 @@ function renderParScore() {
 
 // --- DOUBLE-DUMMY DATA ---
 function fetchDoubleDummy() {
+  const batchNum = doubleDummy ? doubleDummy :
+    String(Math.floor(Math.random() * 512)).padStart(4, '0');
   const url = 'https://raw.githubusercontent.com/macroxue/double-dummy/main/dd.' +
-    doubleDummy;
+    batchNum;
+  console.log(url);
   fetch(url).then(r => r.text()).then(text => {
     const lines = text.split('\n');
     for (let num = 0; num < MAX_BOARDS; num++) {
@@ -601,7 +633,6 @@ function fetchDoubleDummy() {
       board.save();
       boards.push(board);
     }
-    pickStartingBoard();
   });
 }
 

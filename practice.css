@@ -32,14 +32,20 @@ table { white-space: nowrap; }
   width: min(576px, 100vw - 20px);
   padding: 10px;
 }
-#banner {
+#banner, #filter-bar {
   align-items: center;
   display: flex;
   gap: 10px;
   justify-content: space-between;
   padding-bottom: 10px;
 }
-#logo { width: min(60px, 10vw); }
+#filter-bar { display: none; }
+#match {
+  border: 1px solid lightgrey;
+  background-color: #ffe;
+  padding: 5px;
+}
+#logo { width: min(32px, 10vw); }
 #board-num { font-size: 120%; }
 #table {
   border-top: solid lightgrey 1px;
@@ -117,7 +123,7 @@ button {
   height: 48px;
   transition: background-color .2s;
 }
-.nav-btn { width: 100px; }
+.nav-btn { width: 96px; }
 
 .red-btn { background-color: #a00; color: white; }
 .red-btn:hover { background-color: #d00; }
