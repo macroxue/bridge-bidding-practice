@@ -126,8 +126,8 @@ function initialize() {
 
   if (clearStorage) localStorage.clear();
   loadBoards();
-  if (boards.length == 0) fetchDoubleDummy();
-  pickStartingBoard();
+  if (boards.length == 0) fetchDoubleDummy();  // async!
+  else pickStartingBoard();
 }
 
 function loadBoards() {
@@ -628,6 +628,7 @@ function fetchDoubleDummy() {
       board.save();
       boards.push(board);
     }
+    pickStartingBoard();
   });
 }
 
