@@ -1,6 +1,9 @@
-Module = {}
-Module.onRuntimeInitialized = function() {
-  postMessage(['ready']);
+const errors = [];
+
+Module = {
+  'onRuntimeInitialized': function() { postMessage(['ready']); },
+  'onAbort': function() { postMessage(['abort', errors.join('\n')]); },
+  'printErr': function(err) { errors.push('[' + (errors.length + 1) + '] ' + err); },
 }
 
 const BIDDER_SEATS = [ 'West', 'North', 'East', 'South' ];
@@ -28,4 +31,13 @@ onmessage = function(event) {
   }
 };
 
-importScripts('solver.js');
+// Some browsers don't support WASM SIMD, e.g. Firefox 147.0.2 on Galaxy Tab A.
+// Detect SIMD support here and load the right WASM binary in solver.js.
+var simd = true;
+
+fetch('solver.wasm')
+  .then(response => response.arrayBuffer())
+  .then(bytes => {
+    simd = WebAssembly.validate(bytes);
+    importScripts('solver.js');
+  });

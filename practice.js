@@ -56,6 +56,10 @@ worker.onmessage = function(event) {
   const board = boards[num];
 
   switch (type) {
+    case 'abort':
+      alert('Errors initializing the double-dummy solver:\n\n' + event.data[1]);
+      // Continue to 'ready' anyway.
+
     case 'ready':
       initialize();
       break;
