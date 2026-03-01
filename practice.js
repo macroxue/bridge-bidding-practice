@@ -2,6 +2,7 @@ const pairPractice = (new URLSearchParams(window.location.search)).has('p');
 const clearStorage = (new URLSearchParams(window.location.search)).has('c');
 const doubleDummy = (new URLSearchParams(window.location.search)).get('d');
 const exportMarkdown = (new URLSearchParams(window.location.search)).has('m');
+const exportAllAuctions = (new URLSearchParams(window.location.search)).has('a');
 const hideInvalidBids = !(new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
@@ -361,6 +362,7 @@ function endAuction() {
   renderDoubleDummyResults();
   renderSingleDummyResults();
   if (exportMarkdown) renderMarkdown();
+  if (exportAllAuctions) renderAllAuctions();
 }
 
 // --- RENDERING FUNCTIONS ---
@@ -576,7 +578,7 @@ function renderSingleDummyResults() {
   biddingGridEl.innerHTML = html + '</table>';
 }
 
-// --- Markdown ---
+// --- EXPORT BOARDS AND AUCTIONS ---
 const CHINESE_VULNERABLE = { 'None': '双方无局', 'N-S': '南北有局', 'E-W': '东西有局', 'All': '双方有局' };
 const CHINESE_DEALER = { 'West': '西', 'North': '北', 'East': '东', 'South': '南' };
 
@@ -621,6 +623,14 @@ function renderMarkdown() {
   text = text.replace(/N /g, 'NT')
     .replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣');
 
+  markdownEl.innerHTML = '<pre>' + text + '</pre>';
+}
+
+function renderAllAuctions() {
+  let text = '';
+  for (let board of boards) {
+    text += board.getAuctionStr() + '<br>';
+  }
   markdownEl.innerHTML = '<pre>' + text + '</pre>';
 }
 
