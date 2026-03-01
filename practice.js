@@ -6,6 +6,7 @@ const hideInvalidBids = !(new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
 // --- DOM ELEMENTS ---
+const boardEl = document.getElementById('board');
 const filterChk = document.getElementById('filter');
 const filterBar = document.getElementById('filter-bar');
 const notedChk = document.getElementById('noted');
@@ -97,6 +98,9 @@ let currentBoard = -1;
 let boards = [];
 
 function initialize() {
+  boardEl.addEventListener('touchstart', onTouchStart);
+  boardEl.addEventListener('touchmove', onTouchMove);
+
   filterChk.checked = false;
   notedChk.checked = false;
   endedChk.checked = false;
@@ -147,6 +151,28 @@ function loadBoards() {
     }
     boards.push(board);
   }
+}
+
+// --- SWIPE BASED NAVIGATION ---
+let initialX = null;
+let initialY = null;
+
+function onTouchStart(e) {
+  initialX = e.touches[0].clientX;
+  initialY = e.touches[0].clientY;
+}
+
+function onTouchMove(e) {
+  if (!initialX || !initialY) return;
+
+  const diffX = e.touches[0].clientX - initialX;
+  const diffY = e.touches[0].clientY - initialY;
+  if (Math.abs(diffX) > Math.abs(diffY)) {
+    if (diffX > 0) prevBoard();  // swipe right
+    else nextBoard();            // swipe left
+  }
+  initialX = null;
+  initialY = null;
 }
 
 // --- BOARD NAVIGATION ---
