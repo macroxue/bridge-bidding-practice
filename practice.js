@@ -128,10 +128,7 @@ function initialize() {
       boardNumEl.value = currentBoard + 1;
     }
   });
-  noteEl.addEventListener('change', () => {
-    boards[currentBoard].note = noteEl.value;
-    boards[currentBoard].save();
-  });
+  noteEl.addEventListener('change', saveNotes);
 
   if (clearStorage) localStorage.clear();
   loadBoards();
@@ -154,26 +151,38 @@ function loadBoards() {
   }
 }
 
+function saveNotes() {
+  boards[currentBoard].note = noteEl.value;
+  boards[currentBoard].save();
+}
+
 // --- SWIPE BASED NAVIGATION ---
 let initialX = null;
 let initialY = null;
+let initialT = null;
 
 function onTouchStart(e) {
+  if (e.touches.length != 1) return;
   initialX = e.touches[0].clientX;
   initialY = e.touches[0].clientY;
+  initialT = Date.now();
 }
 
 function onTouchMove(e) {
+  if (e.touches.length != 1) return;
   if (!initialX || !initialY) return;
 
   const diffX = e.touches[0].clientX - initialX;
   const diffY = e.touches[0].clientY - initialY;
-  if (Math.abs(diffX) > Math.abs(diffY)) {
+  const diffT = Date.now() - initialT;
+  if (Math.abs(diffX) >= Math.abs(diffY) * 2 && Math.abs(diffX) >= 5 && diffT < 100) {
+    saveNotes();
     if (diffX > 0) prevBoard();  // swipe right
     else nextBoard();            // swipe left
   }
   initialX = null;
   initialY = null;
+  initialT = null;
 }
 
 // --- BOARD NAVIGATION ---
