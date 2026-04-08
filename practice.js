@@ -100,7 +100,7 @@ let boards = [];
 
 function initialize() {
   boardEl.addEventListener('touchstart', onTouchStart);
-  boardEl.addEventListener('touchmove', onTouchMove);
+  boardEl.addEventListener('touchend', onTouchEnd);
 
   filterChk.checked = false;
   notedChk.checked = false;
@@ -163,19 +163,19 @@ let initialT = null;
 
 function onTouchStart(e) {
   if (e.touches.length != 1) return;
-  initialX = e.touches[0].clientX;
-  initialY = e.touches[0].clientY;
+  initialX = e.changedTouches[0].clientX;
+  initialY = e.changedTouches[0].clientY;
   initialT = Date.now();
 }
 
-function onTouchMove(e) {
-  if (e.touches.length != 1) return;
+function onTouchEnd(e) {
+  if (e.touches.length != 0) return;
   if (!initialX || !initialY) return;
 
-  const diffX = e.touches[0].clientX - initialX;
-  const diffY = e.touches[0].clientY - initialY;
+  const diffX = e.changedTouches[0].clientX - initialX;
+  const diffY = e.changedTouches[0].clientY - initialY;
   const diffT = Date.now() - initialT;
-  if (Math.abs(diffX) >= Math.abs(diffY) * 2 && Math.abs(diffX) >= 5 && diffT < 100) {
+  if (Math.abs(diffX) >= Math.abs(diffY) * 2 && Math.abs(diffX) >= 50 && diffT < 300) {
     saveNotes();
     if (diffX > 0) prevBoard();  // swipe right
     else nextBoard();            // swipe left
