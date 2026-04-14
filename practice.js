@@ -46,10 +46,11 @@ const biddingGridEl = document.getElementById('bidding-grid');
 const contractEl = document.getElementById('contract');
 const parScoreEl = document.getElementById('par-score');
 const ddResultsEl = document.getElementById('dd-results');
+const playedCardsEl = document.getElementById('played-cards');
 const markdownEl = document.getElementById('markdown');
 
 // --- DOUBLE DUMMY SOLVER ---
-const worker = new Worker('worker.js');
+const worker = new Worker('worker.js?v=0.1');
 
 worker.onmessage = function(event) {
   const type = event.data[0];
@@ -76,19 +77,27 @@ worker.onmessage = function(event) {
       }
       break;
 
-    case 'solve_leads':
-      board.openingLeads = {};
-      for (const lead of result.split(' ')) {
-        const [card, tricks] = lead.split(':');
-        const suit = card[0];
-        const rank = card[1] === 'T' ? '10' : card[1];
-        board.openingLeads[suit + rank] = tricks;
+    case 'solve_plays':
+      const plays = {};
+      for (const play of result.split(' ')) {
+        const [cardString, tricks] = play.split(':');
+        // A dictionary can't have objects as keys, so use strings for cards instead.
+        plays[cardString] = tricks;
       }
-      board.save();
+      const cardStrings = Object.keys(plays);
+      console.assert(cardStrings.length > 0);
+      if (board.playedCards.length == 0)
+        board.updateOpeningLeads(plays);
 
       if (board.isAuctionOver() && currentBoard == num) {
         // Delayed rendering.
-        renderOpeningLeads();
+        const card = {suit: cardStrings[0][0], rank: cardStrings[0][1]};
+        const seat = board.findSeatForCard(card.suit, card.rank);
+        if (cardStrings.length == 1)
+          // Auto play when there is just one choice.
+          playCard(seat, card);
+        else
+          renderHand(seat, plays);
       }
       break;
   }
@@ -145,7 +154,7 @@ function loadBoards() {
       board.solve();
     }
     if (board.openingLeads == null || board.openingLeads.length == 0) {
-      board.solveLeads();
+      board.solvePlays();
     }
     boards.push(board);
   }
@@ -284,6 +293,8 @@ function showBoard() {
   contractEl.innerHTML = '';
   parScoreEl.innerHTML = '';
   ddResultsEl.innerHTML = '';
+  playedCardsEl.innerHTML = '';
+  playedCardsEl.style.height = '0';
   markdownEl.innerHTML = '';
 
   // Auction
@@ -333,7 +344,6 @@ function showBid(player, bid, index) {
     bid[0] + STRAIN_HTMLS[bid[1]] : bid;
   bidContainer.onclick = () => {
     boards[currentBoard].retractBid(index);
-    boards[currentBoard].save();
     showBoard();
     countMatches();
   };
@@ -346,10 +356,10 @@ function handleBid(bid) {
   const board = boards[currentBoard];
   showBid(board.player, bid, board.auction.length);
   board.addBid(bid);
-  board.save();
   countMatches();
   if (board.isAuctionOver()) {
-    board.solveLeads();
+    board.openingLeads = {};
+    board.solvePlays();
     endAuction();
     return;
   }
@@ -366,10 +376,14 @@ function endAuction() {
     handEls[seat].style.display = 'block';
   }
   renderContract();
-  renderOpeningLeads();
   renderParScore();
   renderDoubleDummyResults();
   renderSingleDummyResults();
+  const board = boards[currentBoard];
+  if (board.playedCards.length == 0)
+    renderOpeningLeads();
+  else
+    renderPlays();
   if (exportMarkdown) renderMarkdown();
   if (exportAllAuctions) renderAllAuctions();
 }
@@ -389,33 +403,50 @@ function renderTricks(tricks) {
   if (tricks <= -1) return '<span class="tricks minus">&ndash;' + -tricks + '</span>';
 }
 
-function renderCard(suit, rank, tricks) {
-  return '<td>' +
-    (rank === '10' ? '<font style="letter-spacing:-3px">1</font>0' :
-      rank === 'J' ? '&hairsp;J&hairsp;' : rank) +
-    (tricks ? renderTricks(Number(tricks)) : '') + '</td>';
+function renderRank(rank) {
+  return rank === 'T' ? '<font style="letter-spacing:-3px">1</font>0' :
+         rank === 'J' ? '&thinsp;J&thinsp;' : rank;
 }
 
-function renderSuit(suit, cards, leads) {
-  let prev_tricks = '';
-  let html = '<table class="suit">' + '<tr><td>' + STRAIN_HTMLS[suit] + '</td>';
-  for (rank of cards) {
-    if ((suit + rank) in leads) {
-      // Show trick info once when it's the same for neighboring cards.
-      const new_tricks = leads[suit + rank];
-      if (new_tricks != prev_tricks) {
-        html += renderCard(suit, rank, new_tricks);
-        prev_tricks = new_tricks;
-        continue;
-      }
+function renderCard(seat, card, tricks = '', onclick = '') {
+  const cardContainer = document.createElement('td');
+  cardContainer.id = toString(card);
+  cardContainer.className = 'card ' + (onclick ? 'playable' : '');
+  cardContainer.innerHTML = renderRank(card.rank) + (tricks ? renderTricks(Number(tricks)) : '');
+  cardContainer.onclick = onclick;
+  return cardContainer;
+}
+
+function renderSuit(seat, suit, cards, plays) {
+  const suitContainer = document.createElement('div');
+  const table = document.createElement('table');
+  table.className = 'suit';
+  const row = document.createElement('tr');
+  const suitSymbol = document.createElement('td');
+  suitSymbol.innerHTML = STRAIN_HTMLS[suit];
+  row.appendChild(suitSymbol);
+  if (cards.length == 0) {
+    const voidSymbol = document.createElement('td');
+    voidSymbol.innerHTML = '&ndash;';
+    row.appendChild(voidSymbol);
+  } else if (toString(cards[0]) in plays) {
+    let prev_tricks = '';
+    for (let card of cards) {
+      const tricks = plays[toString(card)] ?? prev_tricks;
+      const onclick = () => playCard(seat, card);
+      row.appendChild(renderCard(seat, card, tricks != prev_tricks ? tricks : '', onclick));
+      prev_tricks = tricks;
     }
-    html += renderCard(suit, rank, '');
+  } else {
+    for (let card of cards)
+      row.appendChild(renderCard(seat, card));
   }
-  if (cards.length == 0) html += '<td>&ndash;</td>';
-  return html + '</tr></table>';
+  table.appendChild(row);
+  suitContainer.appendChild(table);
+  return suitContainer;
 }
 
-function renderHand(seat, leads = []) {
+function renderHand(seat, plays = {}) {
   const board = boards[currentBoard];
   const hand = board.hands[seat];
   const targetEl = handEls[seat];
@@ -428,12 +459,13 @@ function renderHand(seat, leads = []) {
   targetEl.appendChild(nameContainer);
 
   const suits = { 'S': [], 'H': [], 'D': [], 'C': [] };
-  hand.forEach(card => suits[card.suit].push(card.rank));
+  hand.forEach(card => {
+    if (!board.playedCards.find(playedCard => toString(playedCard) == toString(card)))
+      suits[card.suit].push(card);
+  });
 
   for (const suit of SUITS) {
-    const suitContainer = document.createElement('div');
-    suitContainer.innerHTML = renderSuit(suit, suits[suit], leads);
-    targetEl.appendChild(suitContainer);
+    targetEl.appendChild(renderSuit(seat, suit, suits[suit], plays));
   }
 }
 
@@ -497,13 +529,10 @@ function renderBiddingControls() {
 
 function renderOpeningLeads() {
   const board = boards[currentBoard];
-  if (board.openingLeads == null || board.openingLeads.length == 0) return;
-
-  const {level, trump, doubled, declarer} = board.getContract();
-  if (level == 0) return;
-
-  const lead_seat = BIDDER_SEATS[(SEAT_NUMBERS[declarer] + 1) % 4];
-  renderHand(lead_seat, board.openingLeads);
+  console.assert(board.playedCards.length == 0);
+  if (board.openingLeads == null || Object.keys(board.openingLeads).length == 0)
+    return;
+  renderHand(board.getLeadSeat(), board.openingLeads);
 }
 
 function mergeNumbers(x, y, allowDelta) {
@@ -587,6 +616,44 @@ function renderSingleDummyResults() {
   biddingGridEl.innerHTML = html + '</table>';
 }
 
+// --- PLAYED CARDS ---
+function renderPlays() {
+  const board = boards[currentBoard];
+  console.assert(board.playedCards.length > 0);
+  const {level, trump, doubled, declarer} = board.getContract();
+  if (level == 0) return;
+
+  let player = BIDDER_SEATS[(SEAT_NUMBERS[declarer] + 1) % 4];
+  board.playedCards.forEach((card, index) => {
+    renderPlayedCard(player, card, index);
+    player = nextPlayer(player);
+  });
+  board.solvePlays();
+}
+
+function renderPlayedCard(player, card, index) {
+  const cardContainer = document.createElement('div');
+  cardContainer.className = 'played';
+  cardContainer.innerHTML = STRAIN_HTMLS[card.suit] + renderRank(card.rank);
+  cardContainer.onclick = () => {
+    boards[currentBoard].retractPlayedCards(index);
+    showBoard();
+  };
+  playedCardsEl.appendChild(cardContainer);
+  // Make it visible. It was set to '0' to start.
+  playedCardsEl.style.height = '120px';
+  // Scroll to bottom to show the latest card.
+  playedCardsEl.scrollTop = playedCardsEl.scrollHeight;
+}
+
+function playCard(seat, card) {
+  const board = boards[currentBoard];
+  board.addPlayedCard(card);
+  renderPlayedCard(seat, card, board.playedCards.length - 1);
+  renderHand(seat);
+  board.solvePlays();
+}
+
 // --- EXPORT BOARDS AND AUCTIONS ---
 const CHINESE_VULNERABLE = { 'None': '双方无局', 'N-S': '南北有局', 'E-W': '东西有局', 'All': '双方有局' };
 const CHINESE_DEALER = { 'West': '西', 'North': '北', 'East': '东', 'South': '南' };
@@ -632,7 +699,9 @@ function renderMarkdown() {
   text = text.replace(/N /g, 'NT')
     .replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣');
 
-  markdownEl.innerHTML = '<pre>' + text + '</pre>';
+  const played = board.playedCards.length > 0 ?
+    board.playedCards.join().match(/.{2,8}/g).join('\n') : '';
+  markdownEl.innerHTML = '<pre>' + text + '\n' + played + '</pre>';
 }
 
 function renderAllAuctions() {
@@ -698,8 +767,7 @@ function parseHand(lines) {
     const line = lines[i];
     for (let pos = line.indexOf(suit) + 2; pos < line.length; pos++) {
       if (line[pos] === '-' || line[pos] === ' ') break;
-      hand.push({suit: SUIT_CONVERSIONS[suit],
-                 rank: line[pos] === 'T' ? '10' : line[pos]});
+      hand.push({suit: SUIT_CONVERSIONS[suit], rank: line[pos]});
     }
   }
   return hand;

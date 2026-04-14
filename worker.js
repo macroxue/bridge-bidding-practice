@@ -6,27 +6,27 @@ Module = {
   'printErr': function(err) { errors.push('[' + (errors.length + 1) + '] ' + err); },
 }
 
-const BIDDER_SEATS = [ 'West', 'North', 'East', 'South' ];
-
 onmessage = function(event) {
   const type = event.data[0];
   const num = event.data[1];
   const hands = event.data[2];
   switch (type) {
     case 'solve':
-      const result = Module.ccall('solve', 'string',
-                                  BIDDER_SEATS.map(seat => 'string'),
-                                  BIDDER_SEATS.map(seat => hands[seat]));
+      const result = Module.solve(hands['West'], hands['North'],
+                                  hands['East'], hands['South']);
       postMessage([type, num, result.trim()]);
       break;
 
-    case 'solve_leads':
-      const leads = Module.ccall('solve_leads', 'string',
-                                 BIDDER_SEATS.map(seat => 'string')
-                                 .concat(['number', 'number', 'number']),
-                                 BIDDER_SEATS.map(seat => hands[seat])
-                                 .concat(event.data.slice(3,6)));
-      postMessage([type, num, leads.trim()]);
+    case 'solve_plays':
+      const level = event.data[3];
+      const trump = event.data[4];
+      const lead_seat  = event.data[5];
+      const played_cards = event.data[6];
+      const plays = Module.solve_plays(hands['West'], hands['North'],
+                                       hands['East'], hands['South'],
+                                       level, trump, lead_seat,
+                                       played_cards);
+      postMessage([type, num, plays.trim()]);
       break;
   }
 };
@@ -35,9 +35,9 @@ onmessage = function(event) {
 // Detect SIMD support here and load the right WASM binary in solver.js.
 var simd = true;
 
-fetch('solver.wasm')
+fetch('solver.wasm?v=0.1')
   .then(response => response.arrayBuffer())
   .then(bytes => {
     simd = WebAssembly.validate(bytes);
-    importScripts('solver.js');
+    importScripts('solver.js?v=0.1');
   });

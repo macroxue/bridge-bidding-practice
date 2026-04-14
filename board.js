@@ -12,11 +12,14 @@ const SUITS = ['S', 'H', 'D', 'C'];
 const SUIT_CONVERSIONS = {
   'N': 'N', 'S': 'S', 'H': 'H', 'D': 'D', 'C': 'C',
   'NT': 'N', '♠': 'S', '♥': 'H', '♦': 'D', '♣': 'C' };
+const RANK_CONVERSIONS = {
+  '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
+  'T': 'T', '10': 'T', 'J': 'J', 'Q': 'Q', 'K': 'K', 'A': 'A' };
 const STRAINS = ['N', 'S', 'H', 'D', 'C'];
 const STRAIN_RANKS = { 'N': 4, 'S': 3, 'H': 2, 'D': 1, 'C': 0 };
 const STRAIN_HTMLS = { 'N': 'NT', 'S': '<ss></ss>', 'H': '<hs></hs>', 'D': '<ds></ds>', 'C': '<cs></cs>' };
-const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-const RANK_VALUES = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
+const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+const RANK_VALUES = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
 
 // --- BOARD STATE ---
 class Board {
@@ -28,13 +31,10 @@ class Board {
     this.hands = dealHands();
     this.note = '';
     this.dd = [];
-    this.reset();
-  }
-
-  reset() {
     this.player = this.dealer;
     this.auction = [];
     this.openingLeads = {};
+    this.playedCards = [];
   }
 
   isVulnerable(seat) {
@@ -44,11 +44,15 @@ class Board {
   addBid(bid) {
     this.auction.push(bid);
     this.player = nextPlayer(this.player);
+    this.save();
   }
 
   retractBid(index) {
     this.auction.length = index;
     this.player = BIDDER_SEATS[(SEAT_NUMBERS[this.dealer] + index) % 4]
+    this.retractPlayedCards(0);
+    this.openingLeads = {};
+    this.save();
   }
 
   isAuctionOver() {
@@ -84,9 +88,31 @@ class Board {
   getSuit(seat, suit) {
     let ranks = '';
     this.hands[seat].forEach(card => {
-      if (card.suit == suit) ranks += card.rank == '10' ? 'T' : card.rank;
+      if (card.suit == suit) ranks += card.rank;
     });
     return (suit + ' ' + ranks).padEnd(10);
+  }
+
+  getLeadSeat() {
+    const {level, trump, doubled, declarer} = this.getContract();
+    return level == 0 ? '' : BIDDER_SEATS[(SEAT_NUMBERS[declarer] + 1) % 4];
+  }
+
+  findSeatForCard(suit, rank) {
+    for (seat in this.hands) {
+      if (this.hands[seat].find(card => card.suit == suit && card.rank == rank))
+        return seat;
+    }
+  }
+
+  addPlayedCard(card) {
+    this.playedCards.push(card);
+    this.save();
+  }
+
+  retractPlayedCards(index) {
+    this.playedCards.length = index;
+    this.save();
   }
 
   load() {
@@ -109,8 +135,8 @@ class Board {
     this.auction = this.#convertAuction(object.auction);
     this.note = object.note;
     this.dd = object.dd;
-    this.openingLeads = object.openingLeads;
     this.openingLeads = this.#convertLeads(object.openingLeads);
+    this.playedCards = object.playedCards ?? [];
   }
 
   #convertHands(hands) {
@@ -123,7 +149,8 @@ class Board {
   }
 
   #convertHand(hand) {
-    return hand.map(c => ({suit: SUIT_CONVERSIONS[c.suit], rank: c.rank}));
+    return hand.map(c => ({suit: SUIT_CONVERSIONS[c.suit],
+                           rank: RANK_CONVERSIONS[c.rank]}));
   }
 
   #convertAuction(auction) {
@@ -134,7 +161,7 @@ class Board {
   #convertLeads(leads) {
     const newLeads = {};
     for (const card in leads) {
-      const newCard = SUIT_CONVERSIONS[card[0]] + card.slice(1);
+      const newCard = SUIT_CONVERSIONS[card[0]] + RANK_CONVERSIONS[card.slice(1)];
       newLeads[newCard] = leads[card];
     }
     return newLeads;
@@ -158,18 +185,26 @@ class Board {
     worker.postMessage(['solve', this.num, this.#toHandStrings()]);
   }
 
-  solveLeads() {
-    this.openingLeads = {};
+  solvePlays() {
+    if (this.playedCards.length == 52) return;
     const {level, trump, doubled, declarer} = this.getContract();
     if (level == 0) return;
 
-    const lead_seat = (SEAT_NUMBERS[declarer] + 1) % 4;
-    worker.postMessage(['solve_leads', this.num, this.#toHandStrings(),
-      level, Board.SUIT_NUMBERS[trump], lead_seat]);
+    const leadSeat = (SEAT_NUMBERS[declarer] + 1) % 4;
+    worker.postMessage(['solve_plays', this.num, this.#toHandStrings(),
+      level, Board.SUIT_NUMBERS[trump], leadSeat,
+      this.playedCards.map(card => toString(card)).join('')]);
+  }
+
+  updateOpeningLeads(leads) {
+    this.openingLeads = leads;
+    this.save();
   }
 
   static SUIT_NUMBERS = { 'N': 4, 'S': 0, 'H': 1, 'D': 2, 'C': 3 };
 };
+
+function toString(card) { return card.suit + card.rank; }
 
 function isVulnerable(seat, vulnerable) {
   return vulnerable === 'All' ||
