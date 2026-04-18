@@ -45,6 +45,7 @@ const noteEl = document.getElementById('note');
 const biddingGridEl = document.getElementById('bidding-grid');
 const contractEl = document.getElementById('contract');
 const parScoreEl = document.getElementById('par-score');
+const tricksEl = document.getElementById('tricks');
 const ddResultsEl = document.getElementById('dd-results');
 const playedCardsEl = document.getElementById('played-cards');
 const markdownEl = document.getElementById('markdown');
@@ -292,6 +293,7 @@ function showBoard() {
   noteEl.value = board.note;
   contractEl.innerHTML = '';
   parScoreEl.innerHTML = '';
+  tricksEl.innerHTML = '';
   ddResultsEl.innerHTML = '';
   playedCardsEl.innerHTML = '';
   playedCardsEl.style.height = '0';
@@ -632,6 +634,7 @@ function renderPlays() {
 }
 
 function renderPlayedCard(player, card, index) {
+  const board = boards[currentBoard];
   const cardContainer = document.createElement('div');
   cardContainer.className = 'played';
   cardContainer.innerHTML = STRAIN_HTMLS[card.suit] + renderRank(card.rank);
@@ -640,10 +643,35 @@ function renderPlayedCard(player, card, index) {
     showBoard();
   };
   playedCardsEl.appendChild(cardContainer);
+
+  if (index % 4 == 3) {
+    // A trick finishes.
+    const {level, trump, doubled, declarer} = board.getContract();
+
+    let winner = board.playedCards[index - 3];
+    if (winOver(board.playedCards[index - 2], winner, trump))
+      winner = board.playedCards[index - 2];
+    if (winOver(board.playedCards[index - 1], winner, trump))
+      winner = board.playedCards[index - 1];
+    if (winOver(board.playedCards[index], winner, trump))
+      winner = board.playedCards[index];
+
+    const winnerSeat = board.findSeatForCard(winner.suit, winner.rank)[0];
+    if ("NS".includes(winnerSeat))
+      board.nsTricks += 1;
+    tricksEl.innerHTML = 'NS:' + board.nsTricks +
+                        ' EW:' + ((index + 1) / 4 - board.nsTricks);
+  }
+
   // Make it visible. It was set to '0' to start.
   playedCardsEl.style.height = '120px';
   // Scroll to bottom to show the latest card.
   playedCardsEl.scrollTop = playedCardsEl.scrollHeight;
+}
+
+function winOver(card1, card2, trump) {
+  return card1.suit == card2.suit ? RANK_VALUES[card1.rank] > RANK_VALUES[card2.rank]
+                                  : card1.suit == trump;
 }
 
 function playCard(seat, card) {

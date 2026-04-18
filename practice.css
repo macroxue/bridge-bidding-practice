@@ -64,9 +64,10 @@ table { white-space: nowrap; }
   grid-template-columns: repeat(3, minmax(0, 1fr));
   padding-top: 10px;
 }
-#contract, #par-score {
+div.center {
   align-items: center;
   display: flex;
+  flex-direction: column;
   justify-content: center;
 }
 .seat { white-space: nowrap; }

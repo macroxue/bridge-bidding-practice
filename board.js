@@ -35,6 +35,7 @@ class Board {
     this.auction = [];
     this.openingLeads = {};
     this.playedCards = [];
+    this.nsTricks = 0;
   }
 
   isVulnerable(seat) {
@@ -112,6 +113,7 @@ class Board {
 
   retractPlayedCards(index) {
     this.playedCards.length = index;
+    this.nsTricks = 0;
     this.save();
   }
 
@@ -137,6 +139,7 @@ class Board {
     this.dd = object.dd;
     this.openingLeads = this.#convertLeads(object.openingLeads);
     this.playedCards = object.playedCards ?? [];
+    this.nsTricks = 0;
   }
 
   #convertHands(hands) {
