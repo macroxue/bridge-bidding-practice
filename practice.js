@@ -307,6 +307,7 @@ function showBoard() {
   playedCardsEl.innerHTML = '';
   playedCardsEl.style.height = '0';
   markdownEl.innerHTML = '';
+  board.nsTricks = 0;
 
   // Auction
   flipOnAuction();
