@@ -91,6 +91,14 @@ div.center {
   height: 120px;
   overflow: auto;
 }
+#play-trick {
+  display: grid;
+  font-size: 150%;
+  gap: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  height: 120px;
+  position: relative;  /* allow overlay */
+}
 #note {
   border: 1px solid lightgrey;
   background-color: #ffe;
@@ -124,10 +132,23 @@ div.center {
   background-color: #afa;
   transform: scale(1.3) translate(0px, -2px);
 }
-.played {
-  text-align: center;
+.played, .played-large {
+  align-items: center;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  white-space: nowrap;
 }
-.played:hover {
+.played-large {
+  background-color: white;
+  border: solid 1px lightgrey;
+  border-radius: 6px;
+  transform: scale(1.3);
+}
+.unplayed-large {
+  border: solid 1px transparent;
+}
+.played:hover, .played-large:hover {
   background-color: #fee;
   cursor: url('cross.png'), auto;
 }
@@ -138,6 +159,16 @@ div.center {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   height: 120px;
   overflow: auto;
+}
+#show-auction {
+  font-size: 67%;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+#show-auction:hover {
+  background-color: #fee;
+  cursor: default;
 }
 
 /* Overlay tricks to the center-bottom of the card */

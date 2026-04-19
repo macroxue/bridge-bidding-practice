@@ -41,6 +41,14 @@ const bidsEls = {
   'East': document.getElementById('east-bids'),
 };
 const auctionEl = document.getElementById('auction');
+const playEls = {
+  'South': document.getElementById('south-play'),
+  'North': document.getElementById('north-play'),
+  'West': document.getElementById('west-play'),
+  'East': document.getElementById('east-play'),
+};
+const playTrickEl = document.getElementById('play-trick');
+const showAuctionEl = document.getElementById('show-auction');
 const noteEl = document.getElementById('note');
 const biddingGridEl = document.getElementById('bidding-grid');
 const contractEl = document.getElementById('contract');
@@ -138,6 +146,7 @@ function initialize() {
       boardNumEl.value = currentBoard + 1;
     }
   });
+  showAuctionEl.addEventListener('click', flipOnAuction);
   noteEl.addEventListener('change', saveNotes);
 
   if (clearStorage) localStorage.clear();
@@ -300,6 +309,7 @@ function showBoard() {
   markdownEl.innerHTML = '';
 
   // Auction
+  flipOnAuction();
   for (seat of BIDDER_SEATS) {
     nameEls[seat].className = board.isVulnerable(seat) ? 'red-name' : 'white-name';
     bidsEls[seat].innerHTML = '';
@@ -382,10 +392,13 @@ function endAuction() {
   renderDoubleDummyResults();
   renderSingleDummyResults();
   const board = boards[currentBoard];
-  if (board.playedCards.length == 0)
+  if (board.playedCards.length == 0) {
+    flipOnAuction();
     renderOpeningLeads();
-  else
+  } else {
+    flipOnPlayTrick();
     renderPlays();
+  }
   if (exportMarkdown) renderMarkdown();
   if (exportAllAuctions) renderAllAuctions();
 }
@@ -429,7 +442,7 @@ function renderSuit(seat, suit, cards, plays) {
   row.appendChild(suitSymbol);
   if (cards.length == 0) {
     const voidSymbol = document.createElement('td');
-    voidSymbol.innerHTML = '&ndash;';
+    voidSymbol.innerHTML = '-';
     row.appendChild(voidSymbol);
   } else if (toString(cards[0]) in plays) {
     let prev_tricks = '';
@@ -625,8 +638,10 @@ function renderPlays() {
   const {level, trump, doubled, declarer} = board.getContract();
   if (level == 0) return;
 
-  let player = BIDDER_SEATS[(SEAT_NUMBERS[declarer] + 1) % 4];
+  let player;
   board.playedCards.forEach((card, index) => {
+    if (index % 4 == 0)
+      player = board.findSeatForCard(card.suit, card.rank);
     renderPlayedCard(player, card, index);
     player = nextPlayer(player);
   });
@@ -634,10 +649,27 @@ function renderPlays() {
 }
 
 function renderPlayedCard(player, card, index) {
+  if (index % 4 == 0) {
+    // Clear all seats' plays when a trick starts.
+    for (seat of BIDDER_SEATS) {
+      playEls[seat].className = 'unplayed-large';
+      playEls[seat].innerHTML = '&nbsp;';
+      playEls[seat].onclick = () => {};
+    }
+  }
+  const cardHtml = STRAIN_HTMLS[card.suit] + renderRank(card.rank);
+  playEls[player].className = 'played-large';
+  playEls[player].innerHTML = cardHtml;
+  playEls[player].style.zIndex = index;
+  playEls[player].onclick = () => {
+    boards[currentBoard].retractPlayedCards(index);
+    showBoard();
+  }
+
   const board = boards[currentBoard];
   const cardContainer = document.createElement('div');
   cardContainer.className = 'played';
-  cardContainer.innerHTML = STRAIN_HTMLS[card.suit] + renderRank(card.rank);
+  cardContainer.innerHTML = cardHtml;
   cardContainer.onclick = () => {
     boards[currentBoard].retractPlayedCards(index);
     showBoard();
@@ -675,6 +707,7 @@ function winOver(card1, card2, trump) {
 }
 
 function playCard(seat, card) {
+  flipOnPlayTrick();
   const board = boards[currentBoard];
   board.addPlayedCard(card);
   renderPlayedCard(seat, card, board.playedCards.length - 1);
@@ -862,4 +895,18 @@ function nextPlayer(player) {
   return (player === 'West' ? 'North' :
           player === 'North' ? 'East' :
           player === 'East' ? 'South' : 'West');
+}
+
+function flipOnAuction() {
+  if (auctionEl.style.display !== 'grid') {
+    auctionEl.style.display = 'grid';
+    playTrickEl.style.display = 'none';
+  }
+}
+
+function flipOnPlayTrick() {
+  if (playTrickEl.style.display !== 'grid') {
+    playTrickEl.style.display = 'grid';
+    auctionEl.style.display = 'none';
+  }
 }
