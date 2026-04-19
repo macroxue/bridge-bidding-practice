@@ -82,3 +82,13 @@ Below are some regular expressions looking for patterns in auctions.
 * "3NPPP": ending with a 3NT contract.
 * "NP*XPPP": ending with a doubled NT contract.
 
+## Playing out
+
+[<img src="./play-layout.png" width="100%">](https://macroxue.github.io/bridge-bidding-practice/practice.html)
+
+One can play all four hands to exhaustively explore declarer and defense plays.
+ * Click on a played card to undo the play and all plays after it, either in
+   the trick view or the history view.
+ * Click on the sign at the top right of the trick view to show the auction.
+   Make a play or undo a play to bring back the trick view.
+
