@@ -124,6 +124,7 @@ div.center {
   padding-left: 0px;
   padding-right: 0px;
   position: relative;  /* allow overlay */
+  transform: scale(1.1);
 }
 .playable {
   cursor: pointer;
@@ -173,7 +174,7 @@ div.center {
 
 /* Overlay tricks to the center-bottom of the card */
 .tricks {
-  bottom: -9px;
+  bottom: -8px;
   font-size: 75%;
   left: 50%;
   position: absolute;
