@@ -761,8 +761,8 @@ function renderMarkdown() {
   text = text.replace(/N /g, 'NT')
     .replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣');
 
-  const played = board.playedCards.length > 0 ?
-    board.playedCards.join().match(/.{2,8}/g).join('\n') : '';
+  const played = board.playedCards.length == 0 ? '' :
+    board.playedCards.map(card => toString(card)).join('').match(/.{2,8}/g).join('\n');
   markdownEl.innerHTML = '<pre>' + text + '\n' + played + '</pre>';
 }
 
