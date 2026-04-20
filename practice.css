@@ -124,6 +124,7 @@ div.center {
   padding-left: 0px;
   padding-right: 0px;
   position: relative;  /* allow overlay */
+  text-align: center;
   transform: scale(1.1);
 }
 .playable {
