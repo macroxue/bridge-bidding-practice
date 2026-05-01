@@ -3,7 +3,6 @@ const clearStorage = (new URLSearchParams(window.location.search)).has('c');
 const doubleDummy = (new URLSearchParams(window.location.search)).get('d');
 const exportMarkdown = (new URLSearchParams(window.location.search)).has('m');
 const exportAllAuctions = (new URLSearchParams(window.location.search)).has('a');
-const hideInvalidBids = !(new URLSearchParams(window.location.search)).has('h');
 const smallScreen = window.matchMedia("(max-width: 768px)").matches;
 
 // --- DOM ELEMENTS ---
@@ -50,6 +49,8 @@ const playEls = {
 const playTrickEl = document.getElementById('play-trick');
 const showAuctionEl = document.getElementById('show-auction');
 const noteEl = document.getElementById('note');
+const passBtnEl = document.getElementById('pass-btn');
+const dblBtnEl = document.getElementById('dbl-btn');
 const biddingGridEl = document.getElementById('bidding-grid');
 const contractEl = document.getElementById('contract');
 const parScoreEl = document.getElementById('par-score');
@@ -299,6 +300,8 @@ function showBoard() {
   for (seat of BIDDER_SEATS) {
     renderHand(seat);
   }
+  passBtnEl.innerHTML = '';
+  dblBtnEl.innerHTML = '';
   noteEl.value = board.note;
   contractEl.innerHTML = '';
   parScoreEl.innerHTML = '';
@@ -380,10 +383,10 @@ function handleBid(bid) {
 }
 
 function endAuction() {
-  /* Disable all bid buttons */
-  for (button of document.getElementsByClassName('bid-btn')) {
-    button.style.display = 'none';
-  }
+  // Remove all call/bid buttons
+  passBtnEl.innerHTML = '';
+  dblBtnEl.innerHTML = '';
+  biddingGridEl.innerHTML = '';
   // Reveal all hands
   for (seat of BIDDER_SEATS) {
     handEls[seat].style.display = 'block';
@@ -488,55 +491,59 @@ function renderHand(seat, plays = {}) {
 function renderBiddingControls() {
   const board = boards[currentBoard];
   const auction = board.auction;
+  passBtnEl.innerHTML = '';
+  dblBtnEl.innerHTML = '';
   biddingGridEl.innerHTML = '';
 
   const passBtn = document.createElement('button');
   passBtn.textContent = 'P';
-  passBtn.className = 'green-btn';
+  passBtn.classList.add('green-btn', 'call-btn');
   passBtn.onclick = () => handleBid('P');
-  biddingGridEl.appendChild(passBtn);
+  passBtnEl.appendChild(passBtn);
 
   if (!pairPractice) {
-    const dblBtn = document.createElement('button');
-    dblBtn.textContent = 'X';
-    dblBtn.className = 'red-btn';
-    dblBtn.onclick = () => handleBid('X');
-    biddingGridEl.appendChild(dblBtn);
     const canDbl =
       (auction.length >= 1 && isRealBid(auction[auction.length - 1])) ||
       (auction.length >= 3 && auction[auction.length - 1] === 'P' &&
         auction[auction.length - 2] === 'P' &&
         isRealBid(auction[auction.length - 3]));
-    dblBtn.disabled = !canDbl;
+    if (canDbl) {
+      const dblBtn = document.createElement('button');
+      dblBtn.textContent = 'X';
+      dblBtn.classList.add('red-btn', 'call-btn');
+      dblBtn.onclick = () => handleBid('X');
+      dblBtnEl.appendChild(dblBtn);
+    }
 
-    const rdblBtn = document.createElement('button');
-    rdblBtn.textContent = 'XX';
-    rdblBtn.className = 'blue-btn';
-    rdblBtn.onclick = () => handleBid('XX');
-    biddingGridEl.appendChild(rdblBtn);
     const canRdbl =
       (auction.length >= 1 && auction[auction.length - 1] === 'X') ||
       (auction.length >= 3 && auction[auction.length - 1] === 'P' &&
         auction[auction.length - 2] === 'P' &&
         auction[auction.length - 3] === 'X');
-    rdblBtn.disabled = !canRdbl;
+    if (canRdbl) {
+      const rdblBtn = document.createElement('button');
+      rdblBtn.textContent = 'XX';
+      rdblBtn.classList.add('blue-btn', 'call-btn');
+      rdblBtn.onclick = () => handleBid('XX');
+      dblBtnEl.appendChild(rdblBtn);
+    }
   }
 
   const lastRealBid = [...board.auction].reverse().find(b => isRealBid(b));
   const lastBidRank = lastRealBid ? getBidRank(lastRealBid) : -1;
+  const numPlaceHolders = (lastBidRank + 6 - biddingGridEl.childElementCount) % 5;
+  for (let i = 0; i < numPlaceHolders; ++i)
+    biddingGridEl.appendChild(document.createElement('div'));
 
   for (let level = 1; level <= 7; level++) {
     [...STRAINS].reverse().forEach(suit => {
       const bidString = level + suit;
       const bidRank = getBidRank(bidString);
+      if (bidRank <= lastBidRank) return;
+
       const button = document.createElement('button');
       button.innerHTML = level + STRAIN_HTMLS[suit];
-      button.className = 'grey-btn';
-      if (hideInvalidBids) {
-        button.style.display = (bidRank <= lastBidRank ? 'none' : 'block');
-      } else {
-        button.disabled = (bidRank <= lastBidRank);
-      }
+      button.classList.add('grey-btn');
       button.onclick = () => handleBid(bidString);
       biddingGridEl.appendChild(button);
     });

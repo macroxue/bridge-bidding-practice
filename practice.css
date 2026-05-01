@@ -63,6 +63,7 @@ table { white-space: nowrap; }
   gap: 10px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   padding-top: 10px;
+  position: relative;  /* allow overlay */
 }
 div.center {
   align-items: center;
@@ -102,16 +103,35 @@ div.center {
 #note {
   border: 1px solid lightgrey;
   background-color: #ffe;
+  height: 1em;
   margin-bottom: 10px;
   margin-top: 10px;
   padding: 5px;
   width: calc(100% - 12px);
 }
+#note:placeholder-shown {
+  height: 0px;
+}
+#note:focus {
+  height: 1em;
+}
+#pass-btn {
+  bottom: 5px;
+  left: 0px;
+  position: absolute;
+  width: 18%;
+}
+#dbl-btn {
+  bottom: 5px;
+  right: 0px;
+  position: absolute;
+  width: 18%;
+}
 #bidding-grid {
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  margin-top: 10px;
+  margin-top: 5px;
   overflow: auto;
   text-align: center;
 }
@@ -195,6 +215,7 @@ button {
   transition: background-color .2s;
 }
 .nav-btn { width: 96px; }
+.call-btn { width: 100%; }
 
 .red-btn { background-color: #a00; color: white; }
 .red-btn:hover { background-color: #d00; }
