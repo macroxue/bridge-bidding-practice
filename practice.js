@@ -49,8 +49,8 @@ const playEls = {
 const playTrickEl = document.getElementById('play-trick');
 const showAuctionEl = document.getElementById('show-auction');
 const noteEl = document.getElementById('note');
-const passBtnEl = document.getElementById('pass-btn');
-const dblBtnEl = document.getElementById('dbl-btn');
+const leftBtnEl = document.getElementById('left-btn');
+const rightBtnEl = document.getElementById('right-btn');
 const biddingGridEl = document.getElementById('bidding-grid');
 const contractEl = document.getElementById('contract');
 const parScoreEl = document.getElementById('par-score');
@@ -300,8 +300,8 @@ function showBoard() {
   for (seat of BIDDER_SEATS) {
     renderHand(seat);
   }
-  passBtnEl.innerHTML = '';
-  dblBtnEl.innerHTML = '';
+  leftBtnEl.innerHTML = '';
+  rightBtnEl.innerHTML = '';
   noteEl.value = board.note;
   contractEl.innerHTML = '';
   parScoreEl.innerHTML = '';
@@ -384,8 +384,8 @@ function handleBid(bid) {
 
 function endAuction() {
   // Remove all call/bid buttons
-  passBtnEl.innerHTML = '';
-  dblBtnEl.innerHTML = '';
+  leftBtnEl.innerHTML = '';
+  rightBtnEl.innerHTML = '';
   biddingGridEl.innerHTML = '';
   // Reveal all hands
   for (seat of BIDDER_SEATS) {
@@ -488,12 +488,17 @@ function renderHand(seat, plays = {}) {
   }
 }
 
+let passBtnAtRight = true;
+
 function renderBiddingControls() {
   const board = boards[currentBoard];
   const auction = board.auction;
-  passBtnEl.innerHTML = '';
-  dblBtnEl.innerHTML = '';
+  leftBtnEl.innerHTML = '';
+  rightBtnEl.innerHTML = '';
   biddingGridEl.innerHTML = '';
+
+  const passBtnEl = passBtnAtRight ? rightBtnEl : leftBtnEl;
+  const dblBtnEl = !passBtnAtRight ? rightBtnEl : leftBtnEl;
 
   const passBtn = document.createElement('button');
   passBtn.textContent = 'P';
@@ -526,6 +531,18 @@ function renderBiddingControls() {
       rdblBtn.classList.add('blue-btn', 'call-btn');
       rdblBtn.onclick = () => handleBid('XX');
       dblBtnEl.appendChild(rdblBtn);
+    }
+
+    if (dblBtnEl.childElementCount == 0) {
+      const swapBtn = document.createElement('button');
+      swapBtn.textContent = '⇄';
+      swapBtn.style.fontSize = '100%';
+      swapBtn.classList.add('white-btn', 'call-btn');
+      swapBtn.onclick = () => {
+        passBtnAtRight = !passBtnAtRight;
+        renderBiddingControls();
+      }
+      dblBtnEl.appendChild(swapBtn);
     }
   }
 
