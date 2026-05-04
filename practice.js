@@ -342,6 +342,8 @@ function takeTurn() {
   const board = boards[currentBoard];
   if (board.isAuctionOver()) return;
 
+  showBid(board.player, '?', board.auction.length);
+
   for (seat of BIDDER_SEATS) {
     handEls[seat].style.display = (seat === board.player ? 'block' : 'none');
   }
@@ -355,14 +357,21 @@ function takeTurn() {
 
 function showBid(player, bid, index) {
   const bidContainer = document.createElement('div');
-  bidContainer.className = 'bid';
-  bidContainer.innerHTML = '1234567'.includes(bid[0]) ?
-    bid[0] + STRAIN_HTMLS[bid[1]] : bid;
-  bidContainer.onclick = () => {
-    boards[currentBoard].retractBid(index);
-    showBoard();
-    countMatches();
-  };
+  if (bid == '?') {
+    bidContainer.innerHTML = bid;
+  } else {
+    const lastChild = bidsEls[player].lastElementChild;
+    if (lastChild && lastChild.innerHTML == '?')
+      bidsEls[player].removeChild(lastChild);
+    bidContainer.className = 'bid';
+    bidContainer.innerHTML = '1234567'.includes(bid[0]) ?
+      bid[0] + STRAIN_HTMLS[bid[1]] : bid;
+    bidContainer.onclick = () => {
+      boards[currentBoard].retractBid(index);
+      showBoard();
+      countMatches();
+    };
+  }
   bidsEls[player].appendChild(bidContainer);
   // Scroll to bottom to show the latest bid.
   auctionEl.scrollTop = auctionEl.scrollHeight;
