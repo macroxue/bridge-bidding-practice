@@ -46,6 +46,7 @@ table { white-space: nowrap; }
 #filter-bar { display: none; }
 #match {
   border: 1px solid lightgrey;
+  border-radius: 5px;
   background-color: #ffe;
   padding: 5px;
 }
@@ -76,6 +77,19 @@ div.center {
 .hand {
   background-color: #eee;
   border-collapse: collapse;
+  border-radius: 5px;
+  box-shadow: 2px 2px 6px 0px rgba(0, 0, 0, 0.20);
+  display: none;
+  height: 108px;
+  padding-top: 12px;
+  position: relative;  /* allow overlay */
+}
+.hand-info {
+  border-radius: 5px;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  width: 1.3em;
 }
 .bids {
   font-weight: normal;
@@ -87,6 +101,9 @@ div.center {
 }
 #auction {
   align-content: flex-start;
+  background-color: #eee;
+  border-radius: 5px;
+  box-shadow: 2px 2px 6px 0px rgba(0, 0, 0, 0.20);
   display: grid;
   gap: 0;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -103,6 +120,7 @@ div.center {
 }
 #note {
   border: 1px solid lightgrey;
+  border-radius: 5px;
   background-color: #ffe;
   height: 1em;
   margin-bottom: 10px;
@@ -288,13 +306,11 @@ input:checked + .slider:hover {
 /* Vulnerability */
 .red-name {
   background-color: #a00;
-  border: 1px solid #a00;
   color:white;
   text-align: center;
 }
 .white-name {
   background-color: #fff;
-  border: 1px solid lightgrey;
   color:black;
   text-align: center;
 }

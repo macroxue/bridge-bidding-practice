@@ -422,7 +422,7 @@ function renderContract() {
   const {level, trump, doubled, declarer} = board.getContract();
   contractEl.innerHTML =
     level == 0 ? 'Passed out' : level + STRAIN_HTMLS[trump] +
-    doubled + '&nbsp;by ' + declarer;
+    doubled + '&nbsp;by ' + declarer[0];
 }
 
 function renderTricks(tricks) {
@@ -481,9 +481,9 @@ function renderHand(seat, plays = {}) {
   targetEl.innerHTML = '';
 
   const nameContainer = document.createElement('div');
-  nameContainer.className = 'seat ' +
+  nameContainer.className = 'hand-info seat ' +
     (board.isVulnerable(seat) ? 'red-name' : 'white-name');
-  nameContainer.innerHTML = seat + ' (' + calcHandHcp(hand) + ')';
+  nameContainer.innerHTML = calcHandHcp(hand);
   targetEl.appendChild(nameContainer);
 
   const suits = { 'S': [], 'H': [], 'D': [], 'C': [] };
