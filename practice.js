@@ -298,6 +298,7 @@ function showBoard() {
   // Hands
   tableEl.style.minHeight = pairPractice ? '144px' : '288px';
   for (seat of BIDDER_SEATS) {
+    handEls[seat].classList.remove('declarer');
     renderHand(seat);
   }
   leftBtnEl.innerHTML = '';
@@ -315,7 +316,7 @@ function showBoard() {
   // Auction
   flipOnAuction();
   for (seat of BIDDER_SEATS) {
-    nameEls[seat].className = board.isVulnerable(seat) ? 'red-name' : 'white-name';
+    nameEls[seat].className = board.isVulnerable(seat) ? 'red' : 'white';
     bidsEls[seat].innerHTML = '';
   }
   for (seat of BIDDER_SEATS) {
@@ -397,14 +398,19 @@ function endAuction() {
   rightBtnEl.innerHTML = '';
   biddingGridEl.innerHTML = '';
   // Reveal all hands
+  const board = boards[currentBoard];
+  const {level, trump, doubled, declarer} = board.getContract();
   for (seat of BIDDER_SEATS) {
     handEls[seat].style.display = 'block';
+    if (seat == declarer)
+      handEls[seat].classList.add('declarer');
+    else
+      handEls[seat].classList.remove('declarer');
   }
   renderContract();
   renderParScore();
   renderDoubleDummyResults();
   renderSingleDummyResults();
-  const board = boards[currentBoard];
   if (board.playedCards.length == 0) {
     flipOnAuction();
     renderOpeningLeads();
@@ -480,11 +486,10 @@ function renderHand(seat, plays = {}) {
   const targetEl = handEls[seat];
   targetEl.innerHTML = '';
 
-  const nameContainer = document.createElement('div');
-  nameContainer.className = 'hand-info seat ' +
-    (board.isVulnerable(seat) ? 'red-name' : 'white-name');
-  nameContainer.innerHTML = calcHandHcp(hand);
-  targetEl.appendChild(nameContainer);
+  const hcpContainer = document.createElement('div');
+  hcpContainer.className = 'hcp ' + (board.isVulnerable(seat) ? 'red' : 'white');
+  hcpContainer.innerHTML = calcHandHcp(hand);
+  targetEl.appendChild(hcpContainer);
 
   const suits = { 'S': [], 'H': [], 'D': [], 'C': [] };
   hand.forEach(card => {

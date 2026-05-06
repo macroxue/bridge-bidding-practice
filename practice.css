@@ -84,8 +84,11 @@ div.center {
   padding-top: 12px;
   position: relative;  /* allow overlay */
 }
-.hand-info {
-  border-radius: 5px;
+.declarer {
+  border: 1px solid #888;
+}
+.hcp {
+  border-radius: 4px;
   position: absolute;
   right: 0px;
   top: 0px;
@@ -304,14 +307,14 @@ input:checked + .slider:hover {
 }
 
 /* Vulnerability */
-.red-name {
+.red {
   background-color: #a00;
-  color:white;
+  color: white;
   text-align: center;
 }
-.white-name {
+.white {
   background-color: #fff;
-  color:black;
+  color: black;
   text-align: center;
 }
 
