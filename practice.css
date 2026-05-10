@@ -6,8 +6,8 @@
   color-scheme: light dark;
 }
 body {
-  background-color: light-dark(lightgrey, black);
-  color: light-dark(black, #bcc);
+  background-color: light-dark(lightgrey, #333);
+  color: light-dark(black, #def);
   display: flex;
   font-family: DejaVu;
   font-weight: bold;
@@ -15,7 +15,7 @@ body {
 }
 input {
   background-color: transparent;
-  color: light-dark(black, #bcc);
+  color: light-dark(black, #def);
   font-family: DejaVu;
   font-weight: bold;
 }
@@ -36,7 +36,7 @@ table { white-space: nowrap; }
 
 /* Bridge board */
 #board {
-  background-color: light-dark(white, #011);
+  background-color: light-dark(white, #111);
   border-radius: 20px;
   width: min(576px, 100vw - 20px);
   padding: 15px;
@@ -50,13 +50,13 @@ table { white-space: nowrap; }
 }
 #filter-bar { display: none; }
 #match {
-  border: 1px solid light-dark(lightgrey, #345);
+  border: 1px solid light-dark(lightgrey, #444);
   border-radius: 5px;
-  background-color: light-dark(#ffe, #234);
+  background-color: light-dark(#ffe, #222);
   padding: 5px;
 }
 #match:focus {
-  border: 1px solid light-dark(white, #69c);
+  border: 1px solid light-dark(white, #888);
   outline: none;
 }
 #match:disabled { background-color: #bbb; }
@@ -69,7 +69,7 @@ table { white-space: nowrap; }
   width: 45px;
 }
 #table {
-  border-top: 1px solid light-dark(lightgrey, #234);
+  border-top: 1px solid light-dark(lightgrey, #444);
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -84,7 +84,7 @@ div.center {
 }
 .seat { white-space: nowrap; }
 .hand {
-  background-color: light-dark(#eee, #123);
+  background-color: light-dark(#eee, #222);
   border-collapse: collapse;
   border-radius: 5px;
   box-shadow: 2px 2px 6px 0px light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));
@@ -94,7 +94,7 @@ div.center {
   position: relative;  /* allow overlay */
 }
 .declarer {
-  border: 1px solid light-dark(#888, #69c);
+  border: 1px solid light-dark(#888, #888);
 }
 .hcp {
   border-radius: 4px;
@@ -108,12 +108,12 @@ div.center {
   text-align: center;
 }
 .bid:hover {
-  background-color: light-dark(#fee, #334);
+  background-color: light-dark(#fee, #433);
   cursor: url('cross.png'), auto;
 }
 #auction {
   align-content: flex-start;
-  background-color: light-dark(#eee, #123);
+  background-color: light-dark(#eee, #222);
   border-radius: 5px;
   box-shadow: 2px 2px 6px 0px light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));
   display: grid;
@@ -131,9 +131,9 @@ div.center {
   position: relative;  /* allow overlay */
 }
 #note {
-  border: 1px solid light-dark(lightgrey, #345);
+  border: 1px solid light-dark(lightgrey, #444);
   border-radius: 5px;
-  background-color: light-dark(#ffe, #234);
+  background-color: light-dark(#ffe, #222);
   height: 1em;
   margin-bottom: 10px;
   margin-top: 10px;
@@ -144,7 +144,7 @@ div.center {
   height: 0px;
 }
 #note:focus {
-  border: 1px solid light-dark(white, #69c);
+  border: 1px solid light-dark(white, #888);
   height: 1em;
   outline: none;
 }
@@ -190,8 +190,8 @@ div.center {
   white-space: nowrap;
 }
 .played-large {
-  background-color: light-dark(white, #234);
-  border: solid 1px light-dark(lightgrey, #69c);
+  background-color: light-dark(white, #222);
+  border: solid 1px light-dark(lightgrey, #444);
   border-radius: 6px;
   transform: scale(1.3);
 }
@@ -199,7 +199,7 @@ div.center {
   border: solid 1px transparent;
 }
 .played:hover, .played-large:hover {
-  background-color: light-dark(#fee, #334);
+  background-color: light-dark(#fee, #433);
   cursor: url('cross.png'), auto;
 }
 #played-cards {
@@ -229,8 +229,8 @@ div.center {
   position: absolute;
   transform: translateX(-50%);
 }
-.equal { color: green; }
-.plus { color: green; letter-spacing: -2px; }
+.equal { color: light-dark(green, lightgreen); }
+.plus { color: light-dark(green, lightgreen); letter-spacing: -2px; }
 .minus { color: red; letter-spacing: -1px; }
 
 /* Buttons */
@@ -238,7 +238,7 @@ button {
   border-radius: 24px;
   border-width: 0;
   box-shadow: 2px 2px 6px 0px light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));
-  color: light-dark(white, #bcc);
+  color: light-dark(white, #def);
   font-family: DejaVu;
   font-size: 105%;
   height: 40px;
@@ -247,16 +247,16 @@ button {
 .nav-btn { width: 96px; }
 .call-btn { width: 100%; }
 
-.red-btn { background-color: light-dark(#a00, #700); }
-.red-btn:hover { background-color: light-dark(#d00, #a00); }
-.green-btn { background-color: light-dark(#080, #060); }
-.green-btn:hover { background-color: light-dark(#0c0, #0a0); }
-.blue-btn { background-color: light-dark(#007, #005); }
-.blue-btn:hover { background-color: light-dark(#00f, #00d); }
-.grey-btn { background-color: light-dark(#eee, #123); color: light-dark(black, #bcc); }
-.grey-btn:hover { background-color: light-dark(#ccc, #345); }
-.white-btn { background-color: light-dark(white, #011); color: light-dark(black, #bcc); }
-.white-btn:hover { background-color: light-dark(#ddd, #234); }
+.red-btn { background-color: light-dark(#a00, #933); }
+.red-btn:hover { background-color: light-dark(#d00, #c44); }
+.green-btn { background-color: light-dark(#080, #070); }
+.green-btn:hover { background-color: light-dark(#0c0, #0b0); }
+.blue-btn { background-color: light-dark(#007, #006); }
+.blue-btn:hover { background-color: light-dark(#00f, #00e); }
+.grey-btn { background-color: light-dark(#eee, #222); color: light-dark(black, #def); }
+.grey-btn:hover { background-color: light-dark(#ccc, #444); }
+.white-btn { background-color: light-dark(white, #111); color: light-dark(black, #def); }
+.white-btn:hover { background-color: light-dark(#ddd, #333); }
 .red-btn:disabled, .green-btn:disabled, .blue-btn:disabled,
 .grey-btn:disabled, .white-btn:disabled {
   background-color: light-dark(#444, #222);
@@ -308,7 +308,7 @@ button {
 }
 input:checked + .slider {
   background-color: light-dark(#38c, #146);
-  color: light-dark(white, #bcc);
+  color: light-dark(white, #def);
 }
 input:checked + .slider:before {
   transform: translateX(calc(clamp(40px, 10vw, 60px) - 30px));
@@ -320,21 +320,21 @@ input:checked + .slider:hover {
 
 /* Vulnerability */
 .red {
-  background-color: light-dark(#a00, #800);
-  color: light-dark(white, #bcc);
+  background-color: light-dark(#a00, #933);
+  color: light-dark(white, #def);
   text-align: center;
 }
 .white {
-  background-color: light-dark(#fff, #011);
-  color: light-dark(black, #bcc);
+  background-color: light-dark(#fff, #111);
+  color: light-dark(black, #def);
   text-align: center;
 }
 
 /* Suit symbols */
-ss:before { color: light-dark(#000, #aaa); content: '♠'; }
-hs:before { color: light-dark(#c00, #a00); content: '♥'; }
-ds:before { color: light-dark(#c00, #a00); content: '♦'; }
-cs:before { color: light-dark(#000, #aaa); content: '♣'; }
+ss:before { color: light-dark(#000, #def); content: '♠'; }
+hs:before { color: light-dark(#c00, #c44); content: '♥'; }
+ds:before { color: light-dark(#c00, #c44); content: '♦'; }
+cs:before { color: light-dark(#000, #def); content: '♣'; }
 
 /* Double dummy */
 table.dd {
