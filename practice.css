@@ -63,10 +63,15 @@ table { white-space: nowrap; }
 #match-count { width: 120px; }
 #logo { opacity: 0.8; width: min(32px, 10vw); }
 #board-num {
-  border: 0px;
+  border: 1px solid transparent;
+  border-radius: 5px;
   font-size: 105%;
   text-align: center;
   width: 45px;
+}
+#board-num:focus {
+  border: 1px solid light-dark(#888, #888);
+  outline: none;
 }
 #table {
   border-top: 1px solid light-dark(lightgrey, #444);
