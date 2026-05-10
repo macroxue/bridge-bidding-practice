@@ -56,7 +56,7 @@ table { white-space: nowrap; }
   padding: 5px;
 }
 #match:focus {
-  border: 1px solid light-dark(white, #888);
+  border: 1px solid light-dark(#888, #888);
   outline: none;
 }
 #match:disabled { background-color: #bbb; }
@@ -144,7 +144,7 @@ div.center {
   height: 0px;
 }
 #note:focus {
-  border: 1px solid light-dark(white, #888);
+  border: 1px solid light-dark(#888, #888);
   height: 1em;
   outline: none;
 }
