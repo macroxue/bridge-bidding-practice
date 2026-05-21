@@ -103,9 +103,9 @@ div.center {
   border-radius: 4px;
   content: 'D';
   position: absolute;
+  bottom: 0px;
   right: 0px;
   text-align: center;
-  top: 1.5em;
   width: 1.3em;
 }
 .hcp {
