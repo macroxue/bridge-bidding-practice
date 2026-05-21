@@ -98,8 +98,15 @@ div.center {
   padding-top: 12px;
   position: relative;  /* allow overlay */
 }
-.declarer {
-  border: 1px solid light-dark(#888, #888);
+.declarer:before {
+  background-color: light-dark(#fa0, #b80);
+  border-radius: 4px;
+  content: 'D';
+  position: absolute;
+  right: 0px;
+  text-align: center;
+  top: 1.5em;
+  width: 1.3em;
 }
 .hcp {
   border-radius: 4px;
